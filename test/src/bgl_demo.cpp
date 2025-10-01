@@ -7,4 +7,5 @@ int main() {
   add_edge(0, 1, g);
   add_edge(1, 2, g);
   std::cout << "BGL ok, vertices=" << num_vertices(g) << "\n";
+  auto egs = edges(g);
 }

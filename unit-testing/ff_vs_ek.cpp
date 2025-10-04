@@ -1,4 +1,5 @@
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/edmonds_karp_max_flow.hpp>
 #include <iostream>
 #include <limits>
 #include <stack>
@@ -134,30 +135,56 @@ long ford_fulkerson_max_flow(Graph &g, Vertex s, Vertex t) {
   return max_flow;
 }
 
-int main() {
+// TODO
+// wire-in boost graph generators to produce random
+// graph and place it into g1,g2
+// graph generators links:
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/plod_generator.hpp
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/mesh_graph_generator.hpp
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/rmat_graph_generator.hpp
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/ssca_graph_generator.hpp
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/erdos_renyi_generator.hpp
+// https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/small_world_generator.hpp
+void build_sample_graph(Graph &g1 /*, Graph &g2*/) {
+
+  // dummy graph for now
 
   // 0->1(16), 0->2(13)
   // 1->2(10), 1->3(12)
   // 2->1(4),  2->4(14)
   // 3->2(9),  3->5(20)
   // 4->3(7),  4->5(4)
-  Graph g(6);
+  add_edge_with_capacity(0, 1, 16, g1);
+  add_edge_with_capacity(0, 2, 13, g1);
+  add_edge_with_capacity(1, 2, 10, g1);
+  add_edge_with_capacity(1, 3, 12, g1);
+  add_edge_with_capacity(2, 1, 4, g1);
+  add_edge_with_capacity(2, 4, 14, g1);
+  add_edge_with_capacity(3, 2, 9, g1);
+  add_edge_with_capacity(3, 5, 20, g1);
+  add_edge_with_capacity(4, 3, 7, g1);
+  add_edge_with_capacity(4, 5, 4, g1);
+}
 
-  add_edge_with_capacity(0, 1, 16, g);
-  add_edge_with_capacity(0, 2, 13, g);
-  add_edge_with_capacity(1, 2, 10, g);
-  add_edge_with_capacity(1, 3, 12, g);
-  add_edge_with_capacity(2, 1, 4, g);
-  add_edge_with_capacity(2, 4, 14, g);
-  add_edge_with_capacity(3, 2, 9, g);
-  add_edge_with_capacity(3, 5, 20, g);
-  add_edge_with_capacity(4, 3, 7, g);
-  add_edge_with_capacity(4, 5, 4, g);
-
+int main() {
   Vertex s = 0, t = 5;
 
-  long flow = ford_fulkerson_max_flow(g, s, t);
-  std::cout << "Max flow = " << flow << "\n";
-  // expect 23
+  // Build two identical graphs so each algorithm starts from the same state
+  Graph g_ff(6), g_ek(6);
+  build_sample_graph(g_ff);
+  build_sample_graph(g_ek);
+
+  long flow_ff = ford_fulkerson_max_flow(g_ff, s, t);
+  long flow_ek = edmonds_karp_max_flow(g_ek, s, t); // BGL EK
+
+  std::cout << "FF max flow = " << flow_ff << "\n";
+  std::cout << "EK max flow = " << flow_ek << "\n";
+
+  if (flow_ff == flow_ek) {
+    std::cout << "[OK] Results match\n";
+  } else {
+    std::cout << "[WRONG] Results differ\n";
+  }
+
   return 0;
 }

@@ -1,3 +1,7 @@
+# (AI-generated document)
+
+---
+
 # State of Boost for graphs (BGL & PBGL)
 
 * **BGL = mature, header-only graph library** with generic concepts, graph types (`adjacency_list`, etc.), and a broad algorithm set. ([Boost][1])

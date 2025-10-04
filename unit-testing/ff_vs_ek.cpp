@@ -1,11 +1,18 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/edmonds_karp_max_flow.hpp>
+#include <ctime>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <stack>
 #include <vector>
 
 using namespace boost;
+
+const int VERTEX_COUNT = 100;
+const int CAPACITY_MIN = 1;
+const int CAPACITY_MAX = 50;
+const float EDGES_PER_V = 3.0;
 
 // for defining <*edge container*,*vertex container*,*orientation*> of graph(s)
 // we will use
@@ -145,40 +152,55 @@ long ford_fulkerson_max_flow(Graph &g, Vertex s, Vertex t) {
 // https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/ssca_graph_generator.hpp
 // https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/erdos_renyi_generator.hpp
 // https://github.com/boostorg/graph/blob/boost-1.89.0/include/boost/graph/small_world_generator.hpp
-void build_sample_graph(Graph &g1 /*, Graph &g2*/) {
+void build_sample_graph(Graph &g1, Graph &g2) {
 
-  // dummy graph for now
+  std::random_device rd;
+  std::mt19937 gen(rd());
 
-  // 0->1(16), 0->2(13)
-  // 1->2(10), 1->3(12)
-  // 2->1(4),  2->4(14)
-  // 3->2(9),  3->5(20)
-  // 4->3(7),  4->5(4)
-  add_edge_with_capacity(0, 1, 16, g1);
-  add_edge_with_capacity(0, 2, 13, g1);
-  add_edge_with_capacity(1, 2, 10, g1);
-  add_edge_with_capacity(1, 3, 12, g1);
-  add_edge_with_capacity(2, 1, 4, g1);
-  add_edge_with_capacity(2, 4, 14, g1);
-  add_edge_with_capacity(3, 2, 9, g1);
-  add_edge_with_capacity(3, 5, 20, g1);
-  add_edge_with_capacity(4, 3, 7, g1);
-  add_edge_with_capacity(4, 5, 4, g1);
+  const int vertices = VERTEX_COUNT;
+  const int num_edges = vertices * EDGES_PER_V;
+
+  std::uniform_int_distribution<int> vertex_dist(0, vertices - 1);
+  std::uniform_int_distribution<int> capacity_dist(CAPACITY_MIN, CAPACITY_MAX);
+
+  // add random directed edges with random capacities
+  for (int i = 0; i < num_edges; ++i) {
+    int u = vertex_dist(gen);
+    int v = vertex_dist(gen);
+    if (u == v)
+      continue; // skip self-loops
+
+    long c = capacity_dist(gen);
+    add_edge_with_capacity(u, v, c, g1);
+    add_edge_with_capacity(u, v, c, g2);
+  }
+
+  std::cout << "[INFO] Generated random graph with " << num_edges
+            << " edges and " << vertices << " vertices.\n";
 }
 
 int main() {
-  Vertex s = 0, t = 5;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> vertex_dist(0, VERTEX_COUNT - 1);
 
-  // Build two identical graphs so each algorithm starts from the same state
-  Graph g_ff(6), g_ek(6);
-  build_sample_graph(g_ff);
-  build_sample_graph(g_ek);
+  Vertex s, t;
+  do {
+    s = vertex_dist(gen);
+    t = vertex_dist(gen);
+  } while (s == t); // s ≠ t
+
+  std::cout << "[INFO] Using source s=" << s << " and sink t=" << t << "\n";
+
+  // Build two identical random graphs
+  Graph g_ff(VERTEX_COUNT), g_ek(VERTEX_COUNT);
+  build_sample_graph(g_ff, g_ek);
 
   long flow_ff = ford_fulkerson_max_flow(g_ff, s, t);
-  long flow_ek = edmonds_karp_max_flow(g_ek, s, t); // BGL EK
+  long flow_ek = edmonds_karp_max_flow(g_ek, s, t);
 
-  std::cout << "FF max flow = " << flow_ff << "\n";
-  std::cout << "EK max flow = " << flow_ek << "\n";
+  std::cout << "> FF max flow = " << flow_ff << "\n";
+  std::cout << "> EK max flow = " << flow_ek << "\n";
 
   if (flow_ff == flow_ek) {
     std::cout << "[OK] Results match\n";

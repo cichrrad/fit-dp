@@ -6,6 +6,9 @@
 
 using namespace boost;
 
+// LINK
+//  > https://www.youtube.com/watch?v=LdOnanfc5TM
+
 // for defining <*edge container*,*vertex container*,*orientation*> of graph(s)
 // we will use
 using Traits = adjacency_list_traits<vecS, vecS, directedS>;
@@ -113,6 +116,7 @@ long ford_fulkerson_max_flow(Graph &g, Vertex s, Vertex t) {
     for (Vertex v = t; v != s;) {
       EdgeDesc e = pred[v];
       bottleneck = std::min(bottleneck, res[e]);
+
       // tail of the edge (ie for  a-->b, v would store 'a' )
       // compliments 'target(edgeDescriptor,graph)'
       // only deterministic in directed graphs (duh)

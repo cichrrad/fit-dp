@@ -9,10 +9,11 @@
 
 using namespace boost;
 
-const int VERTEX_COUNT = 100;
+const int VERTEX_COUNT = 1000;
 const int CAPACITY_MIN = 1;
-const int CAPACITY_MAX = 50;
-const float EDGES_PER_V = 3.0;
+const int CAPACITY_MAX = 500;
+const float EDGES_PER_V = 4.0;
+const int RUNS = 100;
 
 // for defining <*edge container*,*vertex container*,*orientation*> of graph(s)
 // we will use
@@ -175,38 +176,44 @@ void build_sample_graph(Graph &g1, Graph &g2) {
     add_edge_with_capacity(u, v, c, g2);
   }
 
+  std::cout << "====================================================\n";
   std::cout << "[INFO] Generated random graph with " << num_edges
             << " edges and " << vertices << " vertices.\n";
 }
 
 int main() {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> vertex_dist(0, VERTEX_COUNT - 1);
 
-  Vertex s, t;
-  do {
-    s = vertex_dist(gen);
-    t = vertex_dist(gen);
-  } while (s == t); // s ≠ t
+  for (int run_id = 0; run_id < RUNS; run_id++) {
 
-  std::cout << "[INFO] Using source s=" << s << " and sink t=" << t << "\n";
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> vertex_dist(0, VERTEX_COUNT - 1);
 
-  // Build two identical random graphs
-  Graph g_ff(VERTEX_COUNT), g_ek(VERTEX_COUNT);
-  build_sample_graph(g_ff, g_ek);
+    Vertex s, t;
+    do {
+      s = vertex_dist(gen);
+      t = vertex_dist(gen);
+    } while (s == t); // s ≠ t
+    std::cout << "[INFO] Using s=" << s << ", t=" << t << "\n";
 
-  long flow_ff = ford_fulkerson_max_flow(g_ff, s, t);
-  long flow_ek = edmonds_karp_max_flow(g_ek, s, t);
+    // Build two identical random graphs
+    Graph g_ff(VERTEX_COUNT), g_ek(VERTEX_COUNT);
+    build_sample_graph(g_ff, g_ek);
 
-  std::cout << "> FF max flow = " << flow_ff << "\n";
-  std::cout << "> EK max flow = " << flow_ek << "\n";
+    long flow_ff = ford_fulkerson_max_flow(g_ff, s, t);
+    long flow_ek = edmonds_karp_max_flow(g_ek, s, t);
 
-  if (flow_ff == flow_ek) {
-    std::cout << "[OK] Results match\n";
-  } else {
-    std::cout << "[WRONG] Results differ\n";
+    std::cout << "> FF max flow = " << flow_ff << "\n";
+    std::cout << "> EK max flow = " << flow_ek << "\n";
+
+    if (flow_ff == flow_ek) {
+      std::cout << "[" << run_id << "][OK] Results match\n";
+    } else {
+      std::cout << "[" << run_id << "][WRONG] Results differ\n";
+      return -1;
+    }
+    std::cout << "====================================================\n";
   }
-
+  std::cout << "   [OK] All " << RUNS << " runs passed.\n";
   return 0;
 }

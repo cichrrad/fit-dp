@@ -24,6 +24,158 @@
 * **BGL headers in tree (develop/master):** algorithm headers under `include/boost/graph` (e.g., `push_relabel_max_flow.hpp`, `edmonds_karp_max_flow.hpp`, `stoer_wagner_min_cut.hpp`, min-cost flow headers). ([GitHub][6])
 * **PBGL headers:** distributed algorithms under `graph_parallel/include/boost/graph/distributed`. ([GitHub][7])
 
+## Exact list of algorithms in BGL
+
+Taken from [TOC](https://www.boost.org/doc/libs/latest/libs/graph/doc/table_of_contents.html)
+
+* **Algorithms**
+
+  * **Named parameters** (used in many graph algorithms)
+  * **Basic Operations**
+
+    * `copy_graph`
+    * `transpose_graph`
+  * **Core Searches**
+
+    * `breadth_first_search`
+    * `breadth_first_visit`
+    * `depth_first_search`
+    * `depth_first_visit`
+    * `undirected_dfs`
+  * **Other Core Algorithms**
+
+    * `topological_sort`
+    * `transitive_closure`
+    * `lengauer_tarjan_dominator_tree`
+  * **Shortest Paths / Cost Minimization Algorithms**
+
+    * `dijkstra_shortest_paths`
+    * `dijkstra_shortest_paths_no_color_map`
+    * `bellman_ford_shortest_paths`
+    * `dag_shortest_paths`
+    * `johnson_all_pairs_shortest_paths`
+    * `floyd_warshall_all_pairs_shortest_paths`
+    * `r_c_shortest_paths` — resource-constrained shortest paths
+    * `astar_search` (A* search algorithm)
+  * **Minimum Spanning Tree Algorithms**
+
+    * `kruskal_minimum_spanning_tree`
+    * `prim_minimum_spanning_tree`
+  * **Random Spanning Tree Algorithm**
+
+    * `random_spanning_tree`
+  * **Algorithm for Common Spanning Trees of Two Graphs**
+
+    * `two_graphs_common_spanning_trees`
+  * **Connected Components Algorithms**
+
+    * `connected_components`
+    * `strong_components`
+    * `biconnected_components`
+    * `articulation_points`
+    * **Incremental Connected Components**
+
+      * `initialize_incremental_components`
+      * `incremental_components`
+      * `same_component`
+      * `component_index`
+  * **Maximum Flow and Matching Algorithms**
+
+    * `edmonds_karp_max_flow`
+    * `push_relabel_max_flow`
+    * `boykov_kolmogorov_max_flow`
+    * `edmonds_maximum_cardinality_matching`
+    * `maximum_weighted_matching`
+  * **Minimum Cost Maximum Flow Algorithms**
+
+    * `cycle_canceling`
+    * `successive_shortest_path_nonnegative_weights`
+    * `find_flow_cost`
+  * **Minimum Cut Algorithms**
+
+    * `stoer_wagner_min_cut`
+  * **Sparse Matrix Ordering Algorithms**
+
+    * `cuthill_mckee_ordering`
+    * `king_ordering`
+    * `minimum_degree_ordering`
+    * `sloan_ordering`
+    * `sloan_start_end_vertices`
+  * **Graph Metrics**
+
+    * `ith_wavefront`, `max_wavefront`, `aver_wavefront`, `rms_wavefront`
+    * `bandwidth`
+    * `ith_bandwidth`
+    * `brandes_betweenness_centrality`
+    * `minimum_cycle_ratio` and `maximum_cycle_ratio`
+  * **Graph Structure Comparisons**
+
+    * `isomorphism`
+    * `vf2_sub_graph_iso` (VF2 subgraph isomorphism algorithm)
+    * `mcgregor_common_subgraphs`
+  * **Layout Algorithms**
+
+    * Topologies used as spaces for graph drawing
+    * `random_graph_layout`
+    * `circle_layout`
+    * `kamada_kawai_spring_layout`
+    * `fruchterman_reingold_force_directed_layout`
+    * `gursoy_atun_layout`
+  * **Clustering algorithms**
+
+    * `betweenness_centrality_clustering`
+  * **Planar Graph Algorithms**
+
+    * `boyer_myrvold_planarity_test`
+    * `planar_face_traversal`
+    * `planar_canonical_ordering`
+    * `chrobak_payne_straight_line_drawing`
+    * `is_straight_line_drawing`
+    * `is_kuratowski_subgraph`
+    * `make_connected`
+    * `make_biconnected_planar`
+    * `make_maximal_planar`
+  * **Miscellaneous Algorithms**
+
+    * `metric_tsp_approx`
+    * `sequential_vertex_coloring`
+    * `edge_coloring`
+    * `is_bipartite` (including two-coloring of bipartite graphs)
+    * `find_odd_cycle`
+    * `maximum_adjacency_search`
+    * `hawick_circuits` (find all circuits of a directed graph)
+
+## Exact list of algorithms in PBGL
+
+Taken from [PBGL docs](https://www.boost.org/doc/libs/1_89_0/libs/graph_parallel/doc/html/index.html)
+
+* **Distributed algorithms**
+
+  * **Breadth-first search**
+  * **Dijkstra’s single-source shortest paths**
+
+    * *Eager Dijkstra shortest paths*
+    * *Crauser et al. Dijkstra shortest paths*
+    * *Delta-Stepping shortest paths*
+  * **Depth-first search**
+  * **Minimum spanning tree**
+
+    * *Borůvka’s minimum spanning tree*
+    * *Merging local minimum spanning forests*
+    * *Borůvka-then-merge*
+    * *Borůvka-mixed-merge*
+  * **Connected components**
+
+    * *Connected components*
+    * *Connected components parallel search*
+    * *Strongly-connected components*
+  * **PageRank**
+  * **Boman et al. graph coloring**
+  * **Fruchterman–Reingold force-directed layout**
+  * **s–t connectivity**
+  * **Betweenness centrality**
+  * **Non-distributed betweenness centrality**
+
 ## Notable gaps / under-represented areas
 
 * **No distributed max-flow / min-cost flow in PBGL.** The PBGL algorithm list omits flow; existing flow is only in sequential BGL. (Opportunity: parallel push-relabel, Dinic, cost-scaling.) ([Boost][2])

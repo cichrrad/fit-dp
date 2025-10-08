@@ -1,4 +1,5 @@
 * [YT playlist for NF](https://www.youtube.com/playlist?list=PLJlBfw5j7ib_6xhr7lrc_WL8X6abiY_rU)
+* [YT playlist Standford course](https://youtube.com/playlist?list=PLEGCF-WLh2RJh2yDxlJJjnKswWdoO8gAc&si=N6lBHa49J1j0nyH8)
 * [Dinic's algorithm YT video](https://www.youtube.com/watch?v=M6cm8UeeziI)
 * [BGL TOC](https://www.boost.org/doc/libs/latest/libs/graph/doc/table_of_contents.html)
   * [`adjacency_list` Class -- configurable interface for defining graphs](https://beta.boost.org/doc/libs/1_82_0/libs/graph/doc/adjacency_list.html)

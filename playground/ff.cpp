@@ -137,31 +137,3 @@ long ford_fulkerson_max_flow(Graph &g, Vertex s, Vertex t) {
 
   return max_flow;
 }
-
-int main() {
-
-  // 0->1(16), 0->2(13)
-  // 1->2(10), 1->3(12)
-  // 2->1(4),  2->4(14)
-  // 3->2(9),  3->5(20)
-  // 4->3(7),  4->5(4)
-  Graph g(6);
-
-  add_edge_with_capacity(0, 1, 16, g);
-  add_edge_with_capacity(0, 2, 13, g);
-  add_edge_with_capacity(1, 2, 10, g);
-  add_edge_with_capacity(1, 3, 12, g);
-  add_edge_with_capacity(2, 1, 4, g);
-  add_edge_with_capacity(2, 4, 14, g);
-  add_edge_with_capacity(3, 2, 9, g);
-  add_edge_with_capacity(3, 5, 20, g);
-  add_edge_with_capacity(4, 3, 7, g);
-  add_edge_with_capacity(4, 5, 4, g);
-
-  Vertex s = 0, t = 5;
-
-  long flow = ford_fulkerson_max_flow(g, s, t);
-  std::cout << "Max flow = " << flow << "\n";
-  // expect 23
-  return 0;
-}

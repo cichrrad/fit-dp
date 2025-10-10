@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
-#include <random> // only for std::random_device
+#include <random> // rd
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -72,7 +72,10 @@ struct Config {
   int s_fixed = 0, t_fixed = 1;
 
   // algorithms
-  bool run_ff = true, run_ek = true, run_dn = true, run_pr = true;
+  bool run_ff = true;
+  bool run_ek = true;
+  bool run_dn = true;
+  bool run_pr = true;
 
   // generator selection
   enum class Gen { ER, PLOD };
@@ -80,9 +83,9 @@ struct Config {
   double er_edges_per_v = 5.0;
 
   // PLOD params
-  double plod_alpha = 2.5;
+  double plod_alpha = 2.72;
   double plod_beta = 1000.0;
-  bool plod_self_loops = false; // typically false for flow networks
+  bool plod_self_loops = false;
 };
 
 // ------------------------- CLI parsing -------------------------
@@ -180,7 +183,7 @@ Common flags:
   --runs=10
   --seed=42               0 => random_device
   --fixed-graph           Reuse exact same edge list for all runs
-  --s=ID --t=ID           Fix source/sink (otherwise deterministic per-run)
+  --s=ID --t=ID           Fix source/sink (otherwise deterministic per-run), can use -1 for (V - 1)
   --help
 Examples:
   )" << prog
@@ -237,6 +240,8 @@ static Config parse_args(int argc, char **argv) {
     std::exit(2);
   }
   if (c.have_fixed_st) {
+    c.s_fixed = c.s_fixed == -1 ? c.V - 1 : c.s_fixed;
+    c.t_fixed = c.t_fixed == -1 ? c.V - 1 : c.t_fixed;
     if (c.s_fixed < 0 || c.s_fixed >= c.V || c.t_fixed < 0 ||
         c.t_fixed >= c.V || c.s_fixed == c.t_fixed) {
       std::cerr << "[ERR] Invalid fixed s,t.\n";
@@ -251,12 +256,12 @@ using Edge = std::tuple<int, int, long>;
 
 static std::vector<Edge> gen_edges_er(int V, int E, int cap_min, int cap_max,
                                       uint64_t seed) {
-  // vertices + capacities both from Boost.Random
+  // vertices
   boost::random::mt19937_64 rng_v(static_cast<std::uint64_t>(seed));
   boost::random::uniform_int_distribution<int> vdist(0, V - 1);
-
   boost::random::mt19937_64 rng_c(
       static_cast<std::uint64_t>(seed ^ 0x9E3779B97F4A7C15ULL));
+  // + capacities
   boost::random::uniform_int_distribution<long> cdist(cap_min, cap_max);
 
   std::vector<Edge> edges;

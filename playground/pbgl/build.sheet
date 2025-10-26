@@ -1,0 +1,1 @@
+mpicxx -O2 pbgl_test.cpp -o out   -lboost_graph_parallel -lboost_graph -lboost_mpi -lboost_serialization

@@ -24,6 +24,7 @@ auto s = source(*e, g2);
 auto t = target(*e, g2);
 
 // get / put for distributed property maps
+auto dpm = get(attribute,g);
 
 synchronize(g);
 process_group(g).synchronize();

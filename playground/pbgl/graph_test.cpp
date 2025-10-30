@@ -29,13 +29,6 @@ void boost::throw_exception(std::exception const &ex) {
 using namespace boost;
 using boost::graph::distributed::mpi_process_group;
 
-template <typename Graph> struct never {
-  typedef typename graph_traits<Graph>::edge_descriptor argument_type;
-  typedef bool result_type;
-
-  result_type operator()(argument_type) { return false; }
-};
-
 int main(int argc, char **argv) {
   boost::mpi::environment env(argc, argv);
 
@@ -50,7 +43,7 @@ int main(int argc, char **argv) {
     return -1;
 
   if (process_id(pg) == 0)
-    std::cout << "Graph 2------------------\n";
+    std::cout << "Graph ------------------\n";
 
   {
     Graph g(20);
@@ -76,7 +69,7 @@ int main(int argc, char **argv) {
         // own vertices, but that only
         // happens if numofp > number of
         // elements split between pg
-        // (we check for that on line 49-50)
+        // (we check for that on line 42-43)
         auto n_global = g.distribution().global(nextpid, 0);
         auto v_first_next = vertex(n_global, g);
         add_edge(u_last, v_first_next, g);
@@ -107,6 +100,7 @@ int main(int argc, char **argv) {
       for (tie(e, e_end) = out_edges(u, g); e != e_end; ++e) {
         auto s = source(*e, g);
         auto t = target(*e, g);
+        // THIS ALLOWS ACCESS TO REMOTE
         std::cout << "  > edge from " << get(vid, s) << "[" << s.owner
                   << "] --> " << get(vid, t) << "[" << t.owner << "]\n";
       }

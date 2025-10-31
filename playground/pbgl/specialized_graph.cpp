@@ -13,28 +13,20 @@
 using namespace boost;
 using boost::graph::distributed::mpi_process_group;
 
-// has to be in boost,
-// else I get error
-namespace boost {
-// excess property
-struct vertex_excess_t {
-  using kind = boost::vertex_property_tag;
-};
-
-BOOST_INSTALL_PROPERTY(vertex, excess);
-} // namespace boost
-
 using Traits =
     adjacency_list_traits<vecS, distributedS<mpi_process_group, vecS>,
                           directedS>;
+using ED = Traits::edge_descriptor;
+using VD = Traits::vertex_descriptor;
 
-using Graph = adjacency_list<
-    vecS, distributedS<mpi_process_group, vecS>, directedS, no_property,
-    property<edge_index_t, std::size_t,
-             property<edge_residual_capacity_t, long,
-                      property<edge_capacity_t, long,
-                               property<edge_reverse_t, long>>>>,
-    property<vertex_distance_t, long, property<vertex_excess_t, long>>, vecS>;
+using Graph =
+    adjacency_list<vecS, distributedS<mpi_process_group, vecS>, directedS,
+                   property<vertex_distance_t, long>,
+                   property<edge_index_t, std::size_t,
+                            property<edge_residual_capacity_t, long,
+                                     property<edge_capacity_t, long,
+                                              property<edge_reverse_t, ED>>>>,
+                   vecS>;
 
 int main(int argc, char **argv) {
   boost::mpi::environment env(argc, argv);
@@ -42,11 +34,6 @@ int main(int argc, char **argv) {
 
   // split between pg
   Graph g(pg);
-
-  // distributed maps for edge
-  auto cap_map = get(edge_capacity, g);
-  auto res_map = get(edge_residual_capacity, g);
-  auto rev_map = get(edge_reverse, g);
   // each process adds locally
   auto u = add_vertex(g);
   auto v = add_vertex(g);
@@ -54,16 +41,28 @@ int main(int argc, char **argv) {
   // add edge (with reverse)
   add_edge(u, v, g);
   add_edge(v, u, g);
+  auto e1 = out_edges(u, g).first;
+  auto e2 = out_edges(v, g).first;
 
+  // distributed maps for edge
+  auto cap_map = get(edge_capacity, g);
+  auto res_map = get(edge_residual_capacity, g);
+  auto rev_map = get(edge_reverse, g);
+  auto e_map = get(edge_index, g);
+  rev_map[*e1] = *e2;
+  rev_map[*e2] = *e1;
   // initialize values
+  synchronize(g);
   graph_traits<Graph>::edge_iterator e, end;
   for (tie(e, end) = edges(g); e != end; e++) {
 
-    put(cap_map, *e, 10);
-    put(res_map, *e, 10);
-    put(rev_map, *e, 10);
-    // adding reverse edge will be bad, as I have
-    // to fetch it somehow
+    put(cap_map, *e, 10 * (process_id(pg) + 1));
+    std::cout << "   >" << cap_map[*e] << "\n";
+    put(res_map, *e, 5 * (process_id(pg) + 1));
+    std::cout << "   >" << res_map[*e] << "\n";
+
+    auto t = target(rev_map[*e], g);
+    std::cout << "   >" << t.local << "\n";
   }
 
   std::cout << "I am processor pid " << process_id(pg) << " and I got "

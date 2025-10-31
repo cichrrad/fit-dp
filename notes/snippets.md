@@ -27,6 +27,6 @@ auto t = target(*e, g2);
 auto dpm = get(attribute,g);
 
 synchronize(g);
-process_group(g).synchronize();
+process_group(pg).synchronize();
 
 ```

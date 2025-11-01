@@ -1,3 +1,4 @@
+
 #include <boost/graph/use_mpi.hpp>
 
 #include <boost/graph/distributed/adjacency_list.hpp>
@@ -17,7 +18,6 @@ using boost::parallel::cm_backward;
 using boost::parallel::cm_bidirectional;
 using boost::parallel::cm_forward;
 
-// we *add* edge_index_t so we can make external edge maps
 using e_static = property<edge_index_t, std::size_t>;
 
 using Graph = adjacency_list<vecS, distributedS<mpi_process_group, vecS>,
@@ -77,4 +77,6 @@ int main(int argc, char **argv) {
   //===================================
   // [1] INITIALIZATION
   //===================================
+
+  // TODO everything else ;)
 }

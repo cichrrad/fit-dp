@@ -1,4 +1,3 @@
-// mwe_ext_props.cpp
 #include <boost/graph/use_mpi.hpp>
 
 #include <boost/graph/distributed/adjacency_list.hpp>

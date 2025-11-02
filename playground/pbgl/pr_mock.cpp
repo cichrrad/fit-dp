@@ -44,22 +44,22 @@ int main(int argc, char **argv) {
   // properties setup
 
   // vertex and edge indexing
-  auto vId = get(vertex_index, g);
-  auto eId = get(edge_index, g);
+  auto vid = get(vertex_index, g);
+  auto eid = get(edge_index, g);
 
   // map indexing onto properties
   // VERTEX PROPERTIES
-  vector_property_map<unsigned long, decltype(vId)> height(vId);
-  vector_property_map<unsigned long, decltype(vId)> new_height(vId);
-  vector_property_map<unsigned long, decltype(vId)> excess(vId);
-  vector_property_map<unsigned long, decltype(vId)> added_excess(vId);
-  vector_property_map<unsigned long, decltype(vId)> work(vId);
-  vector_property_map<unsigned char, decltype(vId)> discovered(vId);
+  vector_property_map<unsigned long, decltype(vid)> height(vid);
+  vector_property_map<unsigned long, decltype(vid)> new_height(vid);
+  vector_property_map<unsigned long, decltype(vid)> excess(vid);
+  vector_property_map<unsigned long, decltype(vid)> added_excess(vid);
+  vector_property_map<unsigned long, decltype(vid)> work(vid);
+  vector_property_map<unsigned char, decltype(vid)> discovered(vid);
   // EDGE PROPERTIES
-  vector_property_map<unsigned long, decltype(eId)> capacity(eId);
-  vector_property_map<unsigned long, decltype(eId)> residual(eId);
+  vector_property_map<unsigned long, decltype(eid)> capacity(eid);
+  vector_property_map<unsigned long, decltype(eid)> residual(eid);
   // global idx of the reverse edges
-  vector_property_map<std::size_t, decltype(eId)> rev_edge(eId);
+  vector_property_map<std::size_t, decltype(eid)> rev_edge(eid);
 
   // CONSISTENCY MODELS
   // V
@@ -103,17 +103,18 @@ int main(int argc, char **argv) {
   }
 
   // GRAPH BUILDING
+  // VERTICES
+  graph_traits<Graph>::vertex_iterator v, vend;
+  for (tie(v, vend) = vertices(g); v != vend; v++) {
+    height[*v] = (vid[*v] == sid ? N : 0);
+  }
+  // EDGES
   for (int i = 0; i < edgeV.size(); i++) {
     const auto &e = edgeV[i];
     const auto &uid = get<0>(e);
     const auto &vid = get<1>(e);
     const auto &cap = get<2>(e);
-    // I should own source
-    auto u = vertex(uid, g);
-    if (u.owner != pid) {
-      return 1;
-    }
-    // vertex setup
-    height[u] = (uid == sid ? N : 0);
   }
+
+  synchronize(g);
 }

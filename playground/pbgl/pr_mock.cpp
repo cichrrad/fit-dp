@@ -6,8 +6,6 @@
 #include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <boost/property_map/parallel/vector_property_map.hpp>
 
-#include <boost/serialization/serialization.hpp>
-
 using namespace boost;
 using boost::graph::distributed::mpi_process_group;
 
@@ -32,9 +30,11 @@ int main(int argc, char **argv) {
   mpi::environment env(argc, argv);
   mpi_process_group pg;
   auto pid = process_id(pg);
+  auto np = num_processes(pg);
 
-  const std::size_t N = 12;
-  if (N < 2 || pg.size > N) {
+  const std::size_t N = 6;
+  // TODO REMOVE THIS CRUX !!!!!
+  if (N != 6 || np != 2) {
     return -1;
   }
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   vector_property_map<unsigned long, decltype(vId)> excess(vId);
   vector_property_map<unsigned long, decltype(vId)> added_excess(vId);
   vector_property_map<unsigned long, decltype(vId)> work(vId);
-  vector_property_map<bool, decltype(vId)> discovered(vId);
+  vector_property_map<unsigned char, decltype(vId)> discovered(vId);
   // EDGE PROPERTIES
   vector_property_map<unsigned long, decltype(eId)> capacity(eId);
   vector_property_map<unsigned long, decltype(eId)> residual(eId);
@@ -83,14 +83,37 @@ int main(int argc, char **argv) {
   using eConf = std::tuple<long, long, long>;
   std::vector<eConf> edgeV;
 
-  // init all vertices and edges
+  // each pid wires up their vertices
+  // (DEMO ASSUME -np 2 and 6 vertices in graph!)
+  // s = 0; t = 5;
+  long sid = 0;
+  long tid = 5;
 
   if (pid == 0) {
-    edgeV.push_back({0, 1, 1});
-    std::cout << pid << "] edges:\n";
-    for (const auto &el : edgeV) {
-      std::cout << "  > |" << get<0>(el) << "]---c(" << get<2>(el) << ")--->"
-                << get<1>(el) << "]\n";
+    edgeV.push_back({0L, 1L, 10L});
+    edgeV.push_back({0L, 2L, 7L});
+    edgeV.push_back({1L, 2L, 4L});
+    // Cross edges
+    edgeV.push_back({1L, 3L, 8L});
+    edgeV.push_back({2L, 4L, 4L});
+  }
+  if (pid == 1) {
+    edgeV.push_back({3L, 5L, 2L});
+    edgeV.push_back({4L, 5L, 2L});
+  }
+
+  // GRAPH BUILDING
+  for (int i = 0; i < edgeV.size(); i++) {
+    const auto &e = edgeV[i];
+    const auto &uid = get<0>(e);
+    const auto &vid = get<1>(e);
+    const auto &cap = get<2>(e);
+    // I should own source
+    auto u = vertex(uid, g);
+    if (u.owner != pid) {
+      return 1;
     }
+    // vertex setup
+    height[u] = (uid == sid ? N : 0);
   }
 }

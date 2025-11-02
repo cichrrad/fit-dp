@@ -78,5 +78,19 @@ int main(int argc, char **argv) {
   // [1] INITIALIZATION
   //===================================
 
-  // TODO everything else ;)
+  // dummy input
+  //                      <u   , v   , cap >
+  using eConf = std::tuple<long, long, long>;
+  std::vector<eConf> edgeV;
+
+  // init all vertices and edges
+
+  if (pid == 0) {
+    edgeV.push_back({0, 1, 1});
+    std::cout << pid << "] edges:\n";
+    for (const auto &el : edgeV) {
+      std::cout << "  > |" << get<0>(el) << "]---c(" << get<2>(el) << ")--->"
+                << get<1>(el) << "]\n";
+    }
+  }
 }

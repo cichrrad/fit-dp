@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
-project(KokkosPlayground CXX)
 cmake_minimum_required(VERSION 3.16)
-project(MyProject)
+project(dp_cichra)
 
 include(FetchContent)
 FetchContent_Declare(

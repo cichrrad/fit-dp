@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 cmake_minimum_required(VERSION 3.16)
 project(dp_cichra)
 
+
+set(Kokkos_ENABLE_OPENMP ON)
+
+
 include(FetchContent)
 FetchContent_Declare(
   Kokkos
@@ -9,6 +13,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Kokkos)
+
 
 add_executable(Playground main.cpp)
 target_link_libraries(Playground PRIVATE Kokkos::kokkos)

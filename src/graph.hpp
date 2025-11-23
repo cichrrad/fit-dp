@@ -3,51 +3,42 @@
 
 #include <Kokkos_Core.hpp>
 
+
+// CSR-ISH SoA
 template <class DeviceType>
 struct Graph
 {
-    // Derived types for cleaner code
+    // types 
     using ExecutionSpace = typename DeviceType::execution_space;
     using MemorySpace = typename DeviceType::memory_space;
 
-    // We use 'long long' for flow/capacity to prevent overflow on large benchmarks
     using FlowType = long long;
     using NodeIndex = int;
     using EdgeIndex = size_t;
-
-    // ------------------------------------------------------------
-    // View Type Definitions
-    // ------------------------------------------------------------
-
+    // "vertex edge start index"
     using row_map_type = Kokkos::View<EdgeIndex *, DeviceType>;
-    using entries_type = Kokkos::View<NodeIndex *, DeviceType>;
-    using capacity_type = Kokkos::View<FlowType *, DeviceType>;
+    // edges -- edge on position [n] holds index of endpoint vertex [v] of edge from
+    // vertex [u] (row_map(u) <= [n] < row_map(u+1))
+    using edge_list_type = Kokkos::View<NodeIndex *, DeviceType>;
+    
     using flow_type = Kokkos::View<FlowType *, DeviceType>;
     using reverse_edge_index_type = Kokkos::View<EdgeIndex *, DeviceType>;
-
-    using excess_type = Kokkos::View<FlowType *, DeviceType>;
     using height_type = Kokkos::View<int *, DeviceType>;
 
-    // ------------------------------------------------------------
-    // Member Variables (The Actual Data)
-    // ------------------------------------------------------------
 
-    // Topology
-    row_map_type row_map; // Size: num_nodes + 1
-    entries_type entries; // Size: num_edges
+    // properties
+    // graph
+    row_map_type row_map;  
+    edge_list_type edge_list; 
+    
+    // edge
+    flow_type capacity;                        
+    flow_type flow;                            
+    reverse_edge_index_type reverse_edge_index;
 
-    // Edge Properties (SoA)
-    capacity_type capacity;                     // Size: num_edges
-    flow_type flow;                             // Size: num_edges
-    reverse_edge_index_type reverse_edge_index; // Size: num_edges
-
-    // Node Properties
-    excess_type excess; // Size: num_nodes
-    height_type height; // Size: num_nodes
-
-    // ============================================================
-    // 4. Helper Methods
-    // ============================================================
+    // vertes
+    flow_type excess;   
+    height_type height; 
 
     // Returns number of nodes
     KOKKOS_INLINE_FUNCTION
@@ -60,7 +51,7 @@ struct Graph
     KOKKOS_INLINE_FUNCTION
     EdgeIndex num_edges() const
     {
-        return entries.extent(0);
+        return edge_list.extent(0);
     }
 };
 

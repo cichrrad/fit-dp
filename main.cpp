@@ -153,8 +153,8 @@ int main(int argc, char **argv)
         }
 
         // Kernel
-        std::cout << "\n Saturating source node " << source << '\n';
-        Kokkos::parallel_for("Saturate_Source", Kokkos::RangePolicy<defDevice>(0, num_nodes - 1), KOKKOS_LAMBDA(const int &idx) {
+        std::cout << "\n Pushing from all nodes\n";
+        Kokkos::parallel_for("mock_push_all", Kokkos::RangePolicy<defDevice>(0, num_nodes - 1), KOKKOS_LAMBDA(const int &idx) {
                 
                 size_t start = g.row_map(idx);
                 size_t end = g.row_map(idx+1);
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
         Kokkos::deep_copy(h_flow, g.flow);
         Kokkos::deep_copy(h_excess, g.excess);
 
-        std::cout << "\n Graph After Saturation\n";
+        std::cout << "\n Graph After\n";
         for (int u = 0; u < num_nodes; ++u)
         {
             std::cout << "Node " << u << " Excess: " << h_excess(u) << "\n";

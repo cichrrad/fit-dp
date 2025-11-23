@@ -39,7 +39,7 @@ struct Graph {
     // Size: num_edges
     // Behavior: 
     // - Initialized to capacity c(u,v). 
-    // - Updated atomically when pushing to neighbors.
+    // - Updated NON-ATOMICALLY in 'Process' kernel (guaranteed by Win condition).
     // - Read frequently to check admissibility.
     Kokkos::View<ValueType*, DeviceType> residual_capacity;
 
@@ -54,13 +54,25 @@ struct Graph {
 
     // Excess: e(v). Flow currently stored at node v.
     // Size: num_nodes
-    // Behavior: Read/Write by owner. Updated from 'added_excess' between iterations.
+    // Behavior: 
+    // - Read/Write by owner thread in 'Process' kernel. 
+    // - Updated from 'added_excess' in 'Apply' kernel.
     Kokkos::View<ValueType*, DeviceType> excess;
 
     // Label: d(v). Distance estimate to sink. 
     // Size: num_nodes
-    // Behavior: Read frequently. Updated only during Relabel phase.
+    // Behavior: 
+    // - Read-Only in 'Process' kernel (to check admissibility).
+    // - Updated in 'Apply' kernel from 'new_label'.
     Kokkos::View<int*, DeviceType> label;
+
+    // New Label: Buffer for label updates.
+    // Size: num_nodes
+    // Behavior:
+    // - Written in 'Process' kernel if a node relabels.
+    // - Read in 'Apply' kernel to update 'label'.
+    // - Prevents race conditions on 'label' during the synchronous step.
+    Kokkos::View<int*, DeviceType> new_label;
 
     // -------------------------------------------------------
     // Algorithm State / Work Management
@@ -80,7 +92,7 @@ struct Graph {
     // Size: num_nodes
     // Behavior: 
     // - Pushes update this buffer atomically to avoid races on 'excess'.
-    // - Reset to 0 at the start of every iteration.
+    // - 'Apply' kernel reads this, adds to 'excess', and resets it to 0.
     Kokkos::View<ValueType*, DeviceType> added_excess;
 
     // Iteration Mask (Generational Marking).

@@ -6,7 +6,7 @@
 #include <iomanip>
 
 #include "src/preprocessing/csv_loader.hpp"
-#include "src/graph.hpp"
+#include "src/mock_graph.hpp"
 
 void preprocess_edges(std::map<std::pair<int, int>, long long> &capacity_map,
                       std::vector<std::vector<int>> &adj,

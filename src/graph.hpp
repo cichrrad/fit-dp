@@ -3,56 +3,133 @@
 
 #include <Kokkos_Core.hpp>
 
+// sections:
+// [CORE TYPES]
+// [GRAPH REPRESENTATION]
+// [EDGE PROPERTIES]
+// [VERTEX PROPERTIES]
+// [STATE / WORK VIEWS]
 
-// CSR-ISH SoA
 template <class DeviceType>
 struct Graph
 {
-    // types 
+
+    // [CORE TYPES]
     using ExecutionSpace = typename DeviceType::execution_space;
     using MemorySpace = typename DeviceType::memory_space;
-
-    using FlowType = long long;
     using NodeIndex = int;
-    using EdgeIndex = size_t;
-    // "vertex edge start index"
-    using row_map_type = Kokkos::View<EdgeIndex *, DeviceType>;
-    // edges -- edge on position [n] holds index of endpoint vertex [v] of edge from
-    // vertex [u] (row_map(u) <= [n] < row_map(u+1))
-    using edge_list_type = Kokkos::View<NodeIndex *, DeviceType>;
-    
-    using flow_type = Kokkos::View<FlowType *, DeviceType>;
-    using reverse_edge_index_type = Kokkos::View<EdgeIndex *, DeviceType>;
-    using height_type = Kokkos::View<int *, DeviceType>;
+    using EdgeIndex = int;
+    using ValueType = long long; // Must support atomic_add
+
+    // [GRAPH REPRESENTATION]
+
+    // CSR Offsets: Indices into entries (edge list).
+    // Size: num_nodes + 1
+    // Read-only during algorithm
+    Kokkos::View<EdgeIndex *, DeviceType> row_map;
+
+    // CSR Entries: The neighbor index for each edge.
+    // Size: num_edges
+    // Access: Read-only, sequential access (coalesced).
+    Kokkos::View<NodeIndex *, DeviceType> entries;
+
+    // [EDGE PROPERTIES]
+
+    // Residual Capacity: c_f(u, v).
+    // Size: num_edges
+    // Behavior:
+    // - Initialized to capacity c(u,v).
+    // - Updated in 'Process' kernel (NO ATOMICS YAY! Courtesy of Win condition).
+    // - Read frequently to check admissibility.
+    Kokkos::View<ValueType *, DeviceType> residual_capacity;
+
+    // Reverse Edge Index: Maps edge (u,v) -> index of (v,u).
+    // Size: num_edges
+    // Access: Read-only during algorithm
+    // - allows O(1) lookup for edges
+    Kokkos::View<EdgeIndex *, DeviceType> reverse_edge;
+
+    // [VERTEX PROPERTIES]
+
+    // Excess: e(v). Flow currently stored at node v.
+    // Size: num_nodes
+    // Behavior:
+    // - Read/Write by owner thread (local) in 'process' part of the algorithm.
+    // - Updated from 'added_excess' in 'apply' part of the algorithm.
+    Kokkos::View<ValueType *, DeviceType> excess;
+
+    // Label: d(v). Distance estimate to sink.
+    // Size: num_nodes
+    // Behavior:
+    // - Read-Only in 'process' part of the algorithm (to check admissibility).
+    // - Updated (local) in 'apply' part of the algorithm from 'new_label'.
+    Kokkos::View<int *, DeviceType> label;
+
+    // New Label: Buffer for label updates.
+    // Size: num_nodes
+    // Behavior:
+    // - Written in 'Process' kernel if a node relabels.
+    // - Read (local) in 'apply' to update 'label'.
+    // - Prevents race conditions on 'label' during the synchronous step.
+    Kokkos::View<int *, DeviceType> new_label;
+
+    // [STATE / WORK VIEWS]
+
+    // Active Set (Current): Nodes active in the current iteration.
+    // Size: <=num_nodes (Capacity)
+    // Behavior: Dense list of valid indices [0, current_queue_size).
+    Kokkos::View<NodeIndex *, DeviceType> current_active;
+
+    // Active Set (Next): Nodes activated for the next iteration.
+    // Size: <=num_nodes (Capacity)
+    // Behavior: Populated via atomic_fetch_add on 'next_queue_size'.
+    Kokkos::View<NodeIndex *, DeviceType> next_active;
+    // no way around atomics, unless we use iteration count
+    // to colour vertices for next step -- BUT that will mean
+    // we will always launch full sized kernel (on all nodes)
+    // out of which 99% of the time, 99% of vertices will
+    // lay dormant -- massive memory bandwith for minimal work
+    // + A lot of branch divergence in the "wavefronts" (or cuda counterpart)
+
+    // Added Excess: Buffer for atomic updates.
+    // Size: num_nodes
+    // Behavior:
+    // - Pushes update this buffer atomically to avoid races on 'excess'.
+    // need for atomics for when 2 nodes push into shared neighbour
+    // - 'apply' reads (local) this, adds to 'excess', and resets it to 0.
+    Kokkos::View<ValueType *, DeviceType> added_excess;
+
+    // Iteration Mask. Used for deduplication of adding to active
+    // Size: num_nodes
+    // Behavior:
+    // - Stores the iteration number 'k' when the node was last added to a queue.
+    // - To add node 'w' to the next queue, we atomic_exchange(mask[w], k+1).
+    // - If the old value was != k+1, we successfully claimed the spot and add to queue.
+    // - ELIMINATES the need to clear a flag array every iteration.
+    Kokkos::View<int *, DeviceType> active_iteration_mask;
+
+    // Queue sizes (single-element Views for device access)
+    Kokkos::View<size_t, DeviceType> current_queue_size;
+    Kokkos::View<size_t, DeviceType> next_queue_size;
 
 
-    // properties
-    // graph
-    row_map_type row_map;  
-    edge_list_type edge_list; 
-    
-    // edge
-    flow_type capacity;                        
-    flow_type flow;                            
-    reverse_edge_index_type reverse_edge_index;
+    // NOTE: -- Work counter to count
+    // work per vertex is not here,
+    // because we can make 'process' parallel reduce
+    // where each vertex returns work it has done
+    // which can be summed into counter to check
+    // for global relabel -- this saves memory
+    // AND reset overhead we would need 
 
-    // vertes
-    flow_type excess;   
-    height_type height; 
+    // -------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------
 
-    // Returns number of nodes
     KOKKOS_INLINE_FUNCTION
-    NodeIndex num_nodes() const
-    {
-        return excess.extent(0);
-    }
+    NodeIndex num_nodes() const { return excess.extent(0); }
 
-    // Returns number of edges
     KOKKOS_INLINE_FUNCTION
-    EdgeIndex num_edges() const
-    {
-        return edge_list.extent(0);
-    }
+    EdgeIndex num_edges() const { return entries.extent(0); }
 };
 
 #endif // GRAPH_HPP

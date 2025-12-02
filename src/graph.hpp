@@ -21,6 +21,13 @@ struct Graph
     using EdgeIndex = int;
     using ValueType = long long; // Must support atomic_add
 
+    using RowMapType = Kokkos::View<EdgeIndex *, DeviceType>;
+    using EntriesType = Kokkos::View<NodeIndex *, DeviceType>;
+    using ValueViewType = Kokkos::View<ValueType *, DeviceType>; // For capacity, excess
+    using IndexViewType = Kokkos::View<EdgeIndex *, DeviceType>; // For reverse index
+    using LabelViewType = Kokkos::View<int *, DeviceType>;
+    using MaskViewType = Kokkos::View<int *, DeviceType>;
+
     // [GRAPH REPRESENTATION]
 
     // CSR Offsets: Indices into entries (edge list).
@@ -112,14 +119,13 @@ struct Graph
     Kokkos::View<size_t, DeviceType> current_queue_size;
     Kokkos::View<size_t, DeviceType> next_queue_size;
 
-
     // NOTE: -- Work counter to count
     // work per vertex is not here,
     // because we can make 'process' parallel reduce
     // where each vertex returns work it has done
     // which can be summed into counter to check
     // for global relabel -- this saves memory
-    // AND reset overhead we would need 
+    // AND reset overhead we would need
 
     // -------------------------------------------------------
     // Helpers

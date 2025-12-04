@@ -25,8 +25,9 @@ int main(int argc, char *argv[])
         std::cout << "\nKokkos initialized on: " << typeid(Device).name() << "\n";
 
         auto g = GraphBuilder::build_graph<Device>(raw_edges, N, s, t);
-        initialize_algorithm(g,s,t,N);
+        initialize_algorithm(g, s, t, N);
 
+        // mirrors on host
         auto h_excess = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.excess);
         auto h_label = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.label);
         auto h_row_map = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.row_map);
@@ -38,13 +39,17 @@ int main(int argc, char *argv[])
         // Print Nodes
         std::cout << "\n[NODE STATE]\n";
         std::cout << "Node | Label | Excess | Status\n";
-        for(int i=0; i<N; ++i) {
-            std::cout << std::setw(4) << i << " | " 
-                      << std::setw(5) << h_label(i) << " | " 
+        for (int i = 0; i < N; ++i)
+        {
+            std::cout << std::setw(4) << i << " | "
+                      << std::setw(5) << h_label(i) << " | "
                       << std::setw(6) << h_excess(i) << " | ";
-            if(i == s) std::cout << "SOURCE";
-            else if(i == t) std::cout << "SINK";
-            else if(h_excess(i) > 0) std::cout << "ACTIVE";
+            if (i == s)
+                std::cout << "SOURCE";
+            else if (i == t)
+                std::cout << "SINK";
+            else if (h_excess(i) > 0)
+                std::cout << "ACTIVE";
             std::cout << "\n";
         }
 
@@ -52,17 +57,31 @@ int main(int argc, char *argv[])
         std::cout << "\n[INITIAL QUEUE]\n";
         std::cout << "Size: " << h_q_size() << "\n";
         std::cout << "Contents: [ ";
-        for(size_t i=0; i<h_q_size(); ++i) std::cout << h_active(i) << " ";
+        for (size_t i = 0; i < h_q_size(); ++i)
+            std::cout << h_active(i) << " ";
         std::cout << "]\n";
 
         // Print Edges
         std::cout << "\n[EDGE STATE (Residual Capacities)]\n";
-        for(int u=0; u<N; ++u) {
-            for(int i=h_row_map(u); i<h_row_map(u+1); ++i) {
+        for (int u = 0; u < N; ++u)
+        {
+            for (int i = h_row_map(u); i < h_row_map(u + 1); ++i)
+            {
                 int v = h_entries(i);
                 std::cout << u << " -> " << v << " : " << h_residual(i) << "\n";
             }
         }
 
+        // kernel 
+        long long work;
+        Kokkos::parallel_reduce("process_kernel", g.current_queue_size(), KOKKOS_LAMBDA(const int &i, long long &local_work) { 
+            auto begin = g.row_map(g.current_active(i));
+            auto end = g.row_map(g.current_active(i)+1);
+            local_work += end-begin;
+        }, work);
+
+        std::cout << "work is " << work << "\n";
     }
+    Kokkos::finalize();
+    std::cout << "Goodbye!";
 };

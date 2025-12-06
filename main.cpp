@@ -10,6 +10,8 @@
 #include "src/initialize_algorithm.hpp"
 #include "src/preprocessing/csv_loader.hpp"
 
+// #define DEBUG_PRINT_ON_HOST
+
 int main(int argc, char *argv[])
 {
     int N;
@@ -109,7 +111,7 @@ int main(int argc, char *argv[])
 
         long long final_excess = 0LL;
 #endif
-        // [HOST] Control Variables
+        // [HOST] Variables
         int iteration = 1;
         size_t h_current_q_size = 0;
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
@@ -125,10 +127,10 @@ int main(int argc, char *argv[])
 #ifdef DEBUG_PRINT_ON_HOST
             std::cout << "\n--- Iteration " << iteration << " ---\n";
 #endif
-            // 1. PROCESS PHASE
             long long step_work = 0;
             int next_iter_mask = iteration + 1;
 
+            // PROCESS =================================================
             Kokkos::parallel_reduce(
                 "process_kernel",
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),
@@ -204,6 +206,7 @@ int main(int argc, char *argv[])
                 step_work);
 
             Kokkos::fence();
+            // PROCESS END ==============================================
 
             // Check Next Queue
             size_t h_next_q_size = 0;
@@ -213,7 +216,7 @@ int main(int argc, char *argv[])
             print_state("POST-PROCESS (Pending Updates)", h_current_q_size, true, final_excess);
             std::cout << "Next Queue Size will be: " << h_next_q_size << "\n";
 #endif
-            // 3. APPLY PHASE
+            // APPLY =================================================
             if (h_next_q_size > 0)
             {
                 Kokkos::parallel_for(
@@ -235,10 +238,12 @@ int main(int argc, char *argv[])
                             g.new_label(u) = 0;
                         }
                     });
+
                 Kokkos::fence();
             }
+            // APPLY END ==============================================
 
-            // 4. QUEUE SWAP
+            // QUEUE SWAP
             std::swap(g.current_active, g.next_active);
             std::swap(g.current_queue_size, g.next_queue_size);
             Kokkos::deep_copy(g.next_queue_size, 0);
@@ -254,7 +259,7 @@ int main(int argc, char *argv[])
         std::cout << "\n[FINISHED] Total Iterations: " << iteration << "\n";
 
         // print from device
-        Kokkos::parallel_for("print_max_flow", Kokkos::RangePolicy<Device>(N - 1, N), KOKKOS_LAMBDA(const int &i) { std::cout << "MAX FLOW IS " << g.added_excess(i) + g.excess(i) << "\n"; });
+        Kokkos::parallel_for("print_max_flow", Kokkos::RangePolicy<Device>(t, t + 1), KOKKOS_LAMBDA(const int &i) { std::cout << "MAX FLOW IS " << g.added_excess(i) + g.excess(i) << "\n"; });
     }
     Kokkos::finalize();
 }

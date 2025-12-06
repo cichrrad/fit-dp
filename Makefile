@@ -7,7 +7,7 @@ clean:
 	rm -rf build && mkdir build && cmake -B build -S . && cmake -B build -S . && cmake --build build && cp build/knfs knfs
 
 run:
-	mkdir -p build && cd build && cmake .. && cmake .. && make && cp knfs ../knfs && cd ../ && ./knfs
+	export OMP_PROC_BIND=spread && export OMP_PLACES=threads && ./knfs
 
 run_lazy_check:
-	./knfs && cd tmp/ && ruby checker.rb && ruby generator.rb && cd ../
+	cd helpers/lazy_check && ruby generator.rb && cd ../../ && make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../

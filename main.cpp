@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
                     int u = g.current_active(i);
                     long long e_u = g.excess(u);
                     int d_u = g.label(u);
+                    // "INF" -- anything > N should do
                     int min_d_neighbor = 2 * g.num_nodes();
 
                     int row_start = g.row_map(u);
@@ -157,29 +158,26 @@ int main(int argc, char *argv[])
                             if (d_v < min_d_neighbor)
                                 min_d_neighbor = d_v;
 
+                            // Admissible
                             if (d_u == d_v + 1)
                             {
-                                // Admissible
-                                if ((d_u < d_v - 1) || (d_u == d_v + 1) || (d_u == d_v && u < v))
+
+                                long long delta = (e_u < cap) ? e_u : cap;
+
+                                g.residual_capacity(idx) -= delta;
+                                int rev_idx = g.reverse_edge(idx);
+                                g.residual_capacity(rev_idx) += delta;
+                                e_u -= delta;
+                                Kokkos::atomic_add(&g.added_excess(v), delta);
+
+                                // Wavefront Logic
+                                if (v != s && v != t)
                                 {
-
-                                    long long delta = (e_u < cap) ? e_u : cap;
-
-                                    g.residual_capacity(idx) -= delta;
-                                    int rev_idx = g.reverse_edge(idx);
-                                    g.residual_capacity(rev_idx) += delta;
-                                    e_u -= delta;
-                                    Kokkos::atomic_add(&g.added_excess(v), delta);
-
-                                    // Wavefront Logic
-                                    if (v != s && v != t)
+                                    int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
+                                    if (seen_mask != next_iter_mask)
                                     {
-                                        int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
-                                        if (seen_mask != next_iter_mask)
-                                        {
-                                            size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
-                                            g.next_active(insert_pos) = v;
-                                        }
+                                        size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
+                                        g.next_active(insert_pos) = v;
                                     }
                                 }
                             }

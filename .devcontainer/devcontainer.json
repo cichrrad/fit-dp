@@ -1,14 +1,21 @@
 {
-    "name": "[DP] -- Kokkos, OpenMP",
+    "name": "[DP] -- Kokkos, OpenMP, Ruby",
     "build": {
         "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/ruby:1": {
+            "version": "latest",
+            "installTools": true
+        }
     },
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-vscode.cpptools",
                 "ms-vscode.cmake-tools",
-                "twxs.cmake"
+                "twxs.cmake",
+                "rebornix.ruby" 
             ]
         }
     },

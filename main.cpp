@@ -131,67 +131,112 @@ int main(int argc, char *argv[])
             int next_iter_mask = iteration + 1;
 
             // PROCESS =================================================
+            // PROCESS =================================================
             Kokkos::parallel_reduce(
                 "process_kernel",
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),
                 KOKKOS_LAMBDA(const int &i, long long &l_work) {
                     int u = g.current_active(i);
                     long long e_u = g.excess(u);
-                    int d_u = g.label(u);
-                    // "INF" -- anything > N should do
-                    int min_d_neighbor = 2 * g.num_nodes();
+
+                    const int d_u_start = g.label(u);
+                    int d_u_current = d_u_start;
 
                     int row_start = g.row_map(u);
                     int row_end = g.row_map(u + 1);
+                    // GR contribution
                     l_work += (row_end - row_start);
 
-                    for (int idx = row_start; idx < row_end; ++idx)
+                    // We loop until discharged or blocked by a conflict
+                    while (e_u > 0)
                     {
-                        if (e_u == 0)
-                            break;
-                        int v = g.entries(idx);
-                        long long cap = g.residual_capacity(idx);
+                        // "Infinity"
+                        // (> N should do)
+                        int min_d_neighbor = 2 * g.num_nodes();
+                        bool skipped_admissible_edge = false;
 
-                        if (cap > 0)
+                        for (int idx = row_start; idx < row_end; ++idx)
                         {
-                            int d_v = g.label(v);
-                            if (d_v < min_d_neighbor)
-                                min_d_neighbor = d_v;
+                            int v = g.entries(idx);
+                            long long cap = g.residual_capacity(idx);
 
-                            // Admissible
-                            if (d_u == d_v + 1)
+                            if (cap > 0)
                             {
+                                int d_v = g.label(v);
 
-                                long long delta = (e_u < cap) ? e_u : cap;
+                                if (d_v < min_d_neighbor)
+                                    min_d_neighbor = d_v;
 
-                                g.residual_capacity(idx) -= delta;
-                                int rev_idx = g.reverse_edge(idx);
-                                g.residual_capacity(rev_idx) += delta;
-                                e_u -= delta;
-                                Kokkos::atomic_add(&g.added_excess(v), delta);
-
-                                // Wavefront Logic
-                                if (v != s && v != t)
+                                if (d_u_current == d_v + 1)
                                 {
-                                    int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
-                                    if (seen_mask != next_iter_mask)
+                                    bool wins = (d_u_start < d_v - 1) ||
+                                                (d_u_start == d_v + 1) ||
+                                                (d_u_start == d_v && u < v);
+
+                                    if (wins)
                                     {
-                                        size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
-                                        g.next_active(insert_pos) = v;
+                                        // PUSH FLOW
+                                        long long delta = (e_u < cap) ? e_u : cap;
+
+                                        g.residual_capacity(idx) -= delta;
+                                        g.residual_capacity(g.reverse_edge(idx)) += delta;
+                                        e_u -= delta;
+                                        Kokkos::atomic_add(&g.added_excess(v), delta);
+
+                                        // Enqueue Neighbor
+                                        if (v != s && v != t)
+                                        {
+                                            int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
+                                            if (seen_mask != next_iter_mask)
+                                            {
+                                                size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
+                                                g.next_active(insert_pos) = v;
+                                            }
+                                        }
+
+                                        if (e_u == 0)
+                                            break;
+                                    }
+                                    else
+                                    {
+                                        // Found admissible edge, but lost conflict.
+                                        skipped_admissible_edge = true;
+                                        break;
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // Relabel Logic
-                    if (e_u > 0)
-                    {
+                        if (e_u == 0)
+                            break;
+
+                        if (skipped_admissible_edge)
+                            break;
+
+                        // If we are here, we have excess AND no admissible edges.
+                        // We must relabel to (min_neighbor + 1).
                         int new_d = min_d_neighbor + 1;
-                        if (new_d < g.num_nodes() * 2 && new_d > d_u)
+
+                        // Apply relabel if valid and increasing
+                        if (new_d < 2 * g.num_nodes() && new_d > d_u_current)
                         {
+                            d_u_current = new_d;
+                            // Buffer update
                             g.new_label(u) = new_d;
                         }
+                        else
+                        {
+                            // If we can't push and can't relabel (e.g. disconnected), we are stuck.
+                            break;
+                        }
+                    }
+
+                    // Write back remaining excess
+                    g.excess(u) = e_u;
+
+                    // Re-enqueue Self if still active
+                    if (e_u > 0)
+                    {
                         int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
                         if (seen_mask != next_iter_mask)
                         {
@@ -199,7 +244,6 @@ int main(int argc, char *argv[])
                             g.next_active(insert_pos) = u;
                         }
                     }
-                    g.excess(u) = e_u;
                 },
                 step_work);
 

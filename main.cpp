@@ -131,7 +131,6 @@ int main(int argc, char *argv[])
             int next_iter_mask = iteration + 1;
 
             // PROCESS =================================================
-            // PROCESS =================================================
             Kokkos::parallel_reduce(
                 "process_kernel",
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),

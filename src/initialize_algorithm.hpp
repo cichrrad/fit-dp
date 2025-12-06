@@ -5,21 +5,22 @@
 #include "graph.hpp"
 
 template <class DeviceType>
-void initialize_algorithm(Graph<DeviceType>& g, int s, int t, int n) {
-    
+void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
+{
+
     using ExecutionSpace = typename DeviceType::execution_space;
     using RangePolicy = Kokkos::RangePolicy<ExecutionSpace>;
 
     // Set Initial Labels: d(s) = n
     // NOTE: -- this might be better to do before moving onto the device
     // to not have to launch kernel
-    Kokkos::parallel_for("Init_Source_Label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
+    Kokkos::parallel_for("Init_Source_Label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
         g.label(s) = n;
         // g.label(t) = 0; // Already 0 from builder
     });
 
     // Saturate Source Edges
-    Kokkos::parallel_for("Saturate_Source", RangePolicy(0, 1), KOKKOS_LAMBDA(const int&) {
+    Kokkos::parallel_for("Saturate_Source", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
         int start = g.row_map(s);
         int end = g.row_map(s+1);
         
@@ -47,6 +48,7 @@ void initialize_algorithm(Graph<DeviceType>& g, int s, int t, int n) {
                 // Direct update to v is safe because v is only a neighbor of s once (simple graph)
                 // or if multi-edge, this thread processes sequentially.
                 g.excess(v) += cap; 
+                // BIG OOPSIE, but we are on 1 thread so chill
                 g.excess(s) -= cap;
 
                 // Activate Neighbor 'v'
@@ -62,9 +64,8 @@ void initialize_algorithm(Graph<DeviceType>& g, int s, int t, int n) {
                     g.active_iteration_mask(v) = 1; 
                 }
             }
-        }
-    });
-    
+        } });
+
     Kokkos::fence();
 }
 

@@ -10,7 +10,7 @@
 #include "src/initialize_algorithm.hpp"
 #include "src/preprocessing/csv_loader.hpp"
 
-// #define DEBUG_PRINT_ON_HOST
+#define DEBUG_PRINT_ON_HOST
 
 int main(int argc, char *argv[])
 {
@@ -33,17 +33,16 @@ int main(int argc, char *argv[])
         // (push from S, add neighbours to intial queue)
         initialize_algorithm(g, s, t, N);
 
+#ifdef DEBUG_PRINT_ON_HOST
         // HOST MIRRORS=================================================
         auto h_excess = Kokkos::create_mirror_view(g.excess);
         auto h_added_excess = Kokkos::create_mirror_view(g.added_excess);
         auto h_label = Kokkos::create_mirror_view(g.label);
         auto h_new_label = Kokkos::create_mirror_view(g.new_label);
-        // =============================================================
-
-#ifdef DEBUG_PRINT_ON_HOST
         auto h_row_map = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.row_map);
         auto h_entries = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.entries);
         auto h_residual = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.residual_capacity);
+        // =============================================================
 
         // [DEBUG] Print Graph Structure
         std::cout << "\n=== [GRAPH ADJACENCY CHECK] ===\n";
@@ -229,7 +228,7 @@ int main(int argc, char *argv[])
                         int new_d = min_d_neighbor + 1;
 
                         // Apply relabel if valid and increasing
-                        if (new_d < 2 * g.num_nodes() && new_d > d_u_current)
+                        if (new_d < 2 * g.num_nodes() && new_d > d_u_start)
                         {
                             d_u_current = new_d;
                             // Buffer update
@@ -249,7 +248,7 @@ int main(int argc, char *argv[])
                     g.excess(u) = e_u;
 
                     // Re-enqueue Self if still active
-                    if (e_u > 0)
+                    if (e_u > 0 || d_u_current > d_u_start)
                     {
                         int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
                         if (seen_mask != next_iter_mask)

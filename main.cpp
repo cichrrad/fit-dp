@@ -114,6 +114,10 @@ int main(int argc, char *argv[])
         // [HOST] Variables
         int iteration = 1;
         size_t h_current_q_size = 0;
+        const long long gr_trigger = 12 * N + 2 * g.num_edges();
+        long long work_since_last_gr = 0;
+        std::cout << "GLOBAL RELABEL TRIGGER = " << gr_trigger << "\n";
+
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
         std::cout << "\n[STARTING ALGORITHM] Initial Active Nodes: " << h_current_q_size << "\n";
 
@@ -127,6 +131,13 @@ int main(int argc, char *argv[])
 #ifdef DEBUG_PRINT_ON_HOST
             std::cout << "\n--- Iteration " << iteration << " ---\n";
 #endif
+
+            if (work_since_last_gr > gr_trigger)
+            {
+                work_since_last_gr = 0;
+                // TODO
+                // global_relabel(g, t, N);
+            }
             long long step_work = 0;
             int next_iter_mask = iteration + 1;
 
@@ -222,6 +233,9 @@ int main(int argc, char *argv[])
                             d_u_current = new_d;
                             // Buffer update
                             g.new_label(u) = new_d;
+                            // add Beta -- relabel tax
+                            // to support global relabel
+                            l_work += 12;
                         }
                         else
                         {
@@ -247,6 +261,7 @@ int main(int argc, char *argv[])
                 step_work);
 
             Kokkos::fence();
+            work_since_last_gr += step_work;
             // PROCESS END ==============================================
 
             // Check Next Queue

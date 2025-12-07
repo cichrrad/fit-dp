@@ -49,7 +49,7 @@ def generate_graph(filename, num_nodes, density, max_cap, bidirectional)
 end
 
 # --- CONFIGURATION ---
-NUM_NODES = 50
+NUM_NODES = 20
 DENSITY = 0.3
 MAX_CAP = 100
 BIDIRECTIONAL = false

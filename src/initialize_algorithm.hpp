@@ -14,13 +14,14 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
     // Set Initial Labels: d(s) = n
     // NOTE: -- this might be better to do before moving onto the device
     // to not have to launch kernel
-    Kokkos::parallel_for("Init_Source_Label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
-        g.label(s) = n;
-        // g.label(t) = 0; // Already 0 from builder
-    });
+    // Kokkos::parallel_for("Init_Source_Label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
+    //     // g.label(t) = 0; // Already 0 from builder
+    //     g.label(s) = n;
+    // });
 
     // Saturate Source Edges
-    Kokkos::parallel_for("Saturate_Source", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
+    Kokkos::parallel_for("Saturate_Source_and_set_label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
+        g.label(s) = n;
         int start = g.row_map(s);
         int end = g.row_map(s+1);
         

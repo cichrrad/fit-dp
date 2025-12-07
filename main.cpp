@@ -154,12 +154,13 @@ int main(int argc, char *argv[])
 
                     int row_start = g.row_map(u);
                     int row_end = g.row_map(u + 1);
-                    // GR contribution
-                    l_work += (row_end - row_start);
 
                     // We loop until discharged or blocked by a conflict
                     while (e_u > 0)
                     {
+                        // GR contribution
+                        l_work += (row_end - row_start);
+
                         // "Infinity"
                         // (> N should do)
                         int min_d_neighbor = 2 * g.num_nodes();

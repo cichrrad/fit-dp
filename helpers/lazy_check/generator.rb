@@ -49,9 +49,14 @@ def generate_graph(filename, num_nodes, density, max_cap, bidirectional)
 end
 
 # --- CONFIGURATION ---
-NUM_NODES = 20
-DENSITY = 0.6
-MAX_CAP = 100
-BIDIRECTIONAL = false
+NUM_NODES = rand(2..51)
+DENSITY = rand(1..10).to_f * 0.1
+MAX_CAP = rand(1..2048)
+BIDIRECTIONAL = rand(1..3) == 2
+
+puts "NODES -- #{NUM_NODES}"
+puts "DENSITY -- #{DENSITY}"
+puts "MAX_CAP -- #{MAX_CAP}"
+puts "BIDIRECTIONAL -- #{BIDIRECTIONAL}"
 
 generate_graph('../../input/mock/generated_graph.csv', NUM_NODES, DENSITY, MAX_CAP, BIDIRECTIONAL)

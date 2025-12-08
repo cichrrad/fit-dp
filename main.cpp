@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
                     // label at the moment kernel was
                     // launched (this wont change)
                     const int d_u_start = g.label(u);
+
                     // current label reflecting
                     // local relabeling when discharging
                     int d_u_current = d_u_start;
@@ -251,6 +252,10 @@ int main(int argc, char *argv[])
                                     {
                                         // Found admissible edge, but lost conflict.
                                         skipped_admissible_edge = true;
+                                        // NOTE -- this might be too strict
+                                        // -- continue might be good too
+                                        // and it would allow other edges
+                                        // to attempt to push to them
                                         break;
                                     }
                                 }
@@ -302,13 +307,12 @@ int main(int argc, char *argv[])
                     // Write back remaining excess
                     g.excess(u) = e_u;
 
-                    
                     // ?TODO FIX?
                     // ?TEMP? we add anything that changed label
                     // during kernel, because we need to fix it in
                     // apply kernel -- there might be better way
                     // to do this and not bloat the working set
-                    
+
                     // enqueue Self if still active
                     if (e_u > 0 || d_u_current > d_u_start)
                     {

@@ -10,7 +10,7 @@
 #include "src/initialize_algorithm.hpp"
 #include "src/preprocessing/csv_loader.hpp"
 
-#define DEBUG_PRINT_ON_HOST
+// #define DEBUG_PRINT_ON_HOST
 
 int main(int argc, char *argv[])
 {
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
             std::cout << "\n--- Iteration " << iteration << " ---\n";
 #endif
 
+            // check for gr (TODO implement)
             if (work_since_last_gr > gr_trigger)
             {
                 work_since_last_gr = 0;
@@ -148,9 +149,14 @@ int main(int argc, char *argv[])
                     int u = g.current_active(i);
                     long long e_u = g.excess(u);
 
+                    // label at the moment kernel was
+                    // launched (this wont change)
                     const int d_u_start = g.label(u);
+                    // current label reflecting
+                    // local relabeling when discharging
                     int d_u_current = d_u_start;
 
+                    // edges from u
                     int row_start = g.row_map(u);
                     int row_end = g.row_map(u + 1);
 
@@ -158,6 +164,10 @@ int main(int argc, char *argv[])
                     while (e_u > 0)
                     {
                         // GR contribution
+                        // this is inside while loop
+                        // se add this every time
+                        // we re-enter it, because
+                        // we rescan edges
                         l_work += (row_end - row_start);
 
                         // "Infinity"
@@ -165,37 +175,64 @@ int main(int argc, char *argv[])
                         int min_d_neighbor = 2 * g.num_nodes();
                         bool skipped_admissible_edge = false;
 
+                        // go over all the edges from u and try
+                        // to push along them if possible
                         for (int idx = row_start; idx < row_end; ++idx)
                         {
+                            // get target of edge idx
+                            // and cap (residual) of idx
                             int v = g.entries(idx);
                             long long cap = g.residual_capacity(idx);
 
+                            // can we still push?
                             if (cap > 0)
                             {
                                 int d_v = g.label(v);
 
+                                // note min neighbour for relabeling later
                                 if (d_v < min_d_neighbor)
                                     min_d_neighbor = d_v;
 
+                                // admissible ?
                                 if (d_u_current == d_v + 1)
                                 {
+                                    // win condition
+                                    // note that this is calculated
+                                    // with const label from kernel launch
+                                    // moment, not current (possibly relabeled)
+                                    // label d_u_current
                                     bool wins = (d_u_start < d_v - 1) ||
                                                 (d_u_start == d_v + 1) ||
                                                 (d_u_start == d_v && u < v);
 
                                     if (wins)
                                     {
-                                        // PUSH FLOW
+                                        // u won, so u can now safely
+                                        // discharge along edge idx
+                                        // => win condition check
+                                        // allows us to NOT use atomics
+                                        // for the pushing
                                         long long delta = (e_u < cap) ? e_u : cap;
 
                                         g.residual_capacity(idx) -= delta;
                                         g.residual_capacity(g.reverse_edge(idx)) += delta;
                                         e_u -= delta;
+                                        // update so that v has it next iteration
+                                        // this has to be atomic as u' might exist
+                                        // also pushing into v at the same time
                                         Kokkos::atomic_add(&g.added_excess(v), delta);
 
-                                        // Enqueue Neighbor
+                                        // Enqueue v
+                                        //(it either did not have excess and now it does = active)
+                                        // OR
+                                        //(it did and whatever it did with it -- pushed all or not
+                                        // -- we just added more)
                                         if (v != s && v != t)
                                         {
+                                            // mark vertices active in NEXT turn with "generational mask"
+                                            // which uses iteration count
+                                            // => removes need for clear between iterations
+                                            // like with bit/bool masks
                                             int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
                                             if (seen_mask != next_iter_mask)
                                             {
@@ -204,9 +241,12 @@ int main(int argc, char *argv[])
                                             }
                                         }
 
+                                        // did we just push all excess of u?
+                                        // if so, break now (from the for loop)
                                         if (e_u == 0)
                                             break;
                                     }
+                                    // we lost = wait it out
                                     else
                                     {
                                         // Found admissible edge, but lost conflict.
@@ -215,16 +255,29 @@ int main(int argc, char *argv[])
                                     }
                                 }
                             }
+                            // we cannot push along this edge
+                            // as it is full
                         }
 
+                        // did we break from the for loop
+                        // because we have nothing left to
+                        // push ? if so, break
+                        // (from the while loop)
                         if (e_u == 0)
                             break;
 
+                        // the moment we lost the win check
+                        // = we know we will lose it
+                        // every time this iteration
+                        // (because we use "old" label)
+                        // = break
+                        // TODO verify????
                         if (skipped_admissible_edge)
                             break;
 
                         // If we are here, we have excess AND no admissible edges.
-                        // We must relabel to (min_neighbor + 1).
+                        // => elabel to (min_neighbor + 1), so we are "uphill"
+                        // from it and can potentially push to it
                         int new_d = min_d_neighbor + 1;
 
                         // Apply relabel if valid and increasing
@@ -235,6 +288,8 @@ int main(int argc, char *argv[])
                             g.new_label(u) = new_d;
                             // add Beta -- relabel tax
                             // to support global relabel
+                            // sooner if we are in this
+                            // situation
                             l_work += 12;
                         }
                         else
@@ -247,7 +302,14 @@ int main(int argc, char *argv[])
                     // Write back remaining excess
                     g.excess(u) = e_u;
 
-                    // Re-enqueue Self if still active
+                    
+                    // ?TODO FIX?
+                    // ?TEMP? we add anything that changed label
+                    // during kernel, because we need to fix it in
+                    // apply kernel -- there might be better way
+                    // to do this and not bloat the working set
+                    
+                    // enqueue Self if still active
                     if (e_u > 0 || d_u_current > d_u_start)
                     {
                         int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
@@ -260,7 +322,9 @@ int main(int argc, char *argv[])
                 },
                 step_work);
 
-            Kokkos::fence();
+            // wait for all threads
+            Kokkos::fence("after_process_fence");
+            // update work metric
             work_since_last_gr += step_work;
             // PROCESS END ==============================================
 
@@ -281,6 +345,9 @@ int main(int argc, char *argv[])
                     KOKKOS_LAMBDA(const int &i) {
                         int u = g.next_active(i);
                         long long incoming = g.added_excess(u);
+                        // update excess added by process
+                        // kernel prior, so that excess
+                        // is up-to-date for next iter
                         if (incoming > 0)
                         {
                             g.excess(u) += incoming;
@@ -288,6 +355,8 @@ int main(int argc, char *argv[])
                         }
                         int d_proposed = g.new_label(u);
                         int d_current = g.label(u);
+                        // if we relabeled during the process
+                        // kernel, update
                         if (d_proposed > d_current)
                         {
                             g.label(u) = d_proposed;
@@ -295,13 +364,15 @@ int main(int argc, char *argv[])
                         }
                     });
 
-                Kokkos::fence();
+                Kokkos::fence("after_apply_fence");
             }
             // APPLY END ==============================================
 
             // QUEUE SWAP
             std::swap(g.current_active, g.next_active);
             std::swap(g.current_queue_size, g.next_queue_size);
+            // TODO -- is this necessary ? Its just 1 number, but the overhead
+            // must be big -- maybe there is a way to do this just on device?
             Kokkos::deep_copy(g.next_queue_size, 0);
 
 #ifdef DEBUG_PRINT_ON_HOST
@@ -315,6 +386,9 @@ int main(int argc, char *argv[])
         std::cout << "\n[FINISHED] Total Iterations: " << iteration << "\n";
 
         // print from device
+        // single thread launched to just print flow
+        // NOTE -- THIS WONT WORK ON GPUs -- WE NEED TO DEEP COPY 'g.added_excess(i) + g.excess(i)' ONTO HOST AND COUT
+        // GOOD ENOUGH FOR NOW (OpenMP)
         Kokkos::parallel_for("print_max_flow", Kokkos::RangePolicy<Device>(t, t + 1), KOKKOS_LAMBDA(const int &i) { std::cout << "MAX FLOW IS " << g.added_excess(i) + g.excess(i) << "\n"; });
     }
     Kokkos::finalize();

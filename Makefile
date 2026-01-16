@@ -9,5 +9,8 @@ clean:
 run:
 	export OMP_PROC_BIND=spread && export OMP_PLACES=threads && ./knfs
 
-run_lazy_check:
+run_generate_check:
 	cd helpers/lazy_check && ruby generator.rb && cd ../../ && make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../
+
+run_check:
+	make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../

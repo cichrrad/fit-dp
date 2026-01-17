@@ -135,17 +135,24 @@ int main(int argc, char *argv[])
             if (work_since_last_gr > gr_trigger)
             {
                 work_since_last_gr = 0;
+#ifdef DEBUG_PRINT_ON_HOST
+                std::cout << "GR TRIGGERED\n";
+#endif
+                global_relabel(g, t, N);
 
-                // std::cout << "GR TRIGGERED\n";
-                // global_relabel(g, t, N);
-                // Kokkos::deep_copy(g.current_queue_size, 0);
-                // Kokkos::parallel_for("Rebuild_Active_Set", Kokkos::RangePolicy(0, N), KOKKOS_LAMBDA(const int v) {
-                //     if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
-                //          int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
-                //          g.current_active(pos) = v;
-                //         //  g.active_iteration_mask(v) = iteration + 1; // Mark as active for current iter
-                //     } });
-                // Kokkos::fence();
+                // reset size
+                Kokkos::deep_copy(g.current_queue_size, 0);
+
+                // Rebuild Active Set (Device)
+                Kokkos::parallel_for("Rebuild_Active_Set", Kokkos::RangePolicy<Device>(0, N), KOKKOS_LAMBDA(const int v) {
+                    if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
+                            int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
+                            g.current_active(pos) = v;
+                    } });
+                Kokkos::fence();
+
+                // The kernel below needs the NEW size
+                Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
             }
             long long step_work = 0;
             int next_iter_mask = iteration + 1;

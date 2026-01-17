@@ -9,6 +9,7 @@
 #include "src/graph_builder.hpp"
 #include "src/initialize_algorithm.hpp"
 #include "src/preprocessing/csv_loader.hpp"
+#include "src/global_relabel.hpp"
 
 // #define DEBUG_PRINT_ON_HOST
 
@@ -131,12 +132,20 @@ int main(int argc, char *argv[])
             std::cout << "\n--- Iteration " << iteration << " ---\n";
 #endif
 
-            // check for gr (TODO implement)
             if (work_since_last_gr > gr_trigger)
             {
                 work_since_last_gr = 0;
-                // TODO
+
+                // std::cout << "GR TRIGGERED\n";
                 // global_relabel(g, t, N);
+                // Kokkos::deep_copy(g.current_queue_size, 0);
+                // Kokkos::parallel_for("Rebuild_Active_Set", Kokkos::RangePolicy(0, N), KOKKOS_LAMBDA(const int v) {
+                //     if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
+                //          int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
+                //          g.current_active(pos) = v;
+                //         //  g.active_iteration_mask(v) = iteration + 1; // Mark as active for current iter
+                //     } });
+                // Kokkos::fence();
             }
             long long step_work = 0;
             int next_iter_mask = iteration + 1;

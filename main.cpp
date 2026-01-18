@@ -272,7 +272,9 @@ int main(int argc, char *argv[])
                                         // -- continue might be good too
                                         // and it would allow other edges
                                         // to attempt to push to them
-                                        break;
+
+                                        // break;
+                                        continue;
                                     }
                                 }
                             }

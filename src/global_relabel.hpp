@@ -7,40 +7,41 @@
 template <class DeviceType>
 void global_relabel(Graph<DeviceType> &g, int t, int n)
 {
-    using ExecutionSpace = typename DeviceType::execution_space;
+   using ExecutionSpace = typename DeviceType::execution_space;
     using RangePolicy = Kokkos::RangePolicy<ExecutionSpace>;
 
-    // 1. Reset all labels to 'n' (infinity) and handle the sink 't'.
-    // 'n' label ~ unvisited --> labels 'n' at the end are unreachable nodes
-    Kokkos::parallel_for("GlobalRelabel_Reset", RangePolicy(0, n), KOKKOS_LAMBDA(const int v) {
-        g.label(v) = n; // Set to unreachable
+    Kokkos::deep_copy(g.next_queue_size, 0);
+    // Kernel Fusion
+    // Reset, Sink Setup, and Queue Init merged into one kernel.
+    // technically, this is bad because id "diverges" the 1 warp (32 threads) t is in
+    // BUT if we were to do it with no divergence, we would need separate kernel launch
+    // which is HUGE overhead 
+    Kokkos::parallel_for("GlobalRelabel_Fused_Init", RangePolicy(0, n), KOKKOS_LAMBDA(const int v) {
+        if (v == t) {
+            // This is the Sink
+            g.label(v) = 0;
+            
+            // Initialize BFS Queue with Sink
+            g.current_active(0) = t;
+            g.current_queue_size() = 1; 
+        } else {
+            // This is a normal node
+            g.label(v) = n; 
+        }
     });
 
-    // Explicitly set sink distance to 0
-    Kokkos::parallel_for("GlobalRelabel_SetSink", RangePolicy(0, 1), KOKKOS_LAMBDA(const int) { g.label(t) = 0; });
-
-    // 2. Initialize BFS Queue
-    //    We can reuse the graph's queue views
-    //    BUT we need to fix them after in a pass
-    Kokkos::deep_copy(g.current_queue_size, 0);
-    Kokkos::deep_copy(g.next_queue_size, 0);
-
-    // Add sink 't' to current_active (BFS queue)
-    Kokkos::parallel_for("GlobalRelabel_InitQueue", RangePolicy(0, 1), KOKKOS_LAMBDA(const int) {
-        g.current_active(0) = t;
-        g.current_queue_size() = 1; });
+    // Fence to ensure the queue is ready before the Host reads size in the loop
     Kokkos::fence();
 
     // 3. BFS Loop
     //    Run until queue is empty or we exceed N (in N steps we must reach all N nodes...duh)
-    //    'dist' tracks the current distance from sink
     for (int dist = 0; dist < n; ++dist)
     {
 
         // Get host copy of queue size to check termination
         size_t current_q_size = 0;
-        // TODO -- this is bad
-        // N copy operations, if device is not same as host
+        // TODO -- is this bad???
+        // worst case is N copy operations, if device is not same as host
         Kokkos::deep_copy(current_q_size, g.current_queue_size);
 
         if (current_q_size == 0)
@@ -63,15 +64,16 @@ void global_relabel(Graph<DeviceType> &g, int t, int n)
                 // Check if flow can push from v to u
                 if (g.residual_capacity(rev_idx) > 0) {
                     
-                    // Check if v is unvisited (label is n)
-                    // We use atomic_compare_exchange to ensure we only update/add once
+                    // Check if v is unvisited (label is n ~ INF)
+                    // atomic_compare_exchange to ensure we only update/add once
                     int expected_label = n;
                     int new_label_val = dist + 1;
                     
                     // Try to set label from 'n' to 'dist + 1'
                     if (Kokkos::atomic_compare_exchange(&g.label(v), expected_label, new_label_val) == expected_label) {
-                        // Success: We claimed v. Add to next queue.
                         int next_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
+                        // add it to next active, as we will be iterating its edges
+                        // next iteration
                         g.next_active(next_pos) = v;
                     }
                 }
@@ -80,9 +82,9 @@ void global_relabel(Graph<DeviceType> &g, int t, int n)
         Kokkos::fence();
 
         // Swap Queues
-        // We reuse the pointers in the Graph struct temporarily
-        // NOTE: This does not affect the main algorithm state because Global Relabel
-        // completely refreshes the active sets anyway.
+        // We reuse the pointers in the Graph struct
+        // this forces additional pass after global relabel
+        // but utilizes memory better
         std::swap(g.current_active, g.next_active);
         std::swap(g.current_queue_size, g.next_queue_size);
 

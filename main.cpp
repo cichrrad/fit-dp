@@ -143,7 +143,8 @@ int main(int argc, char *argv[])
                 // reset size
                 Kokkos::deep_copy(g.current_queue_size, 0);
 
-                // Rebuild Active Set (Device)
+                // global_relabel uses queues, so we need to rebuild the
+                // set of active vertices for this iteration
                 Kokkos::parallel_for("Rebuild_Active_Set", Kokkos::RangePolicy<Device>(0, N), KOKKOS_LAMBDA(const int v) {
                     if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
                             int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
@@ -151,7 +152,6 @@ int main(int argc, char *argv[])
                     } });
                 Kokkos::fence();
 
-                // The kernel below needs the NEW size
                 Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
             }
             long long step_work = 0;

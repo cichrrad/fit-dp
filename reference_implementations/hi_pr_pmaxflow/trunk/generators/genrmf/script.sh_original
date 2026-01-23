@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# bourne shell settings
+. /opt/gridengine/default/common/settings.sh
+. /share/apps/scripts/env_vars.sh
+
+#
+# Script to run a serial (one processor) job
+#
+
+# SGE submission options
+
+# Set number of processors (Use multiples of 24. Do not use larger than 72 as it decreases performance)
+#$ -pe orte 12
+
+# Change to current working directory  (Do not change)
+#$ -cwd
+
+# Export environment variables into script (Do not change)
+#$ -V
+
+# Name of the job  (Enter an identification)
+#$ -N efebaris
+
+# E-mail configuration (Send e-mail when the job "b"egins, "a"borts, and "e"nds)
+##$ -m bae
+
+# Array size
+#$ -t 1-13
+#Your e-mail address
+#$ -M efegencer@gmail.com
+perl tests.run.pl $SGE_TASK_ID

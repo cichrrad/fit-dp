@@ -4,10 +4,16 @@
 
 [X] [`hpf`](https://riot.ieor.berkeley.edu/Applications/Pseudoflow/maxflow.html)
 
-[_] [`f_prf` (dead link)](http://www.avglab.com/soft.html)
-
 [X] [`hi_pr` (no direct link, paper hunted down copy in another project)](https://code.google.com/archive/p/pmaxflow/source/default/source)
 
+
+## Parallel
+
+[X] [`ECL-MaxFlow` -- modern, CUDA native (tied with `ipccc25a.pdf` whitepaper)](https://github.com/burtscher/ECL-MaxFlow/)
+
+[X] [Gunrock (v1) Max Flow (`app/mf`)](https://github.com/gunrock/gunrock/tree/master)
+
+[X]? [Whitepaper implementation -- CPU parallel native](https://github.com/niklasb/pbbs-maxflow/tree/master)
 
 # Other
 

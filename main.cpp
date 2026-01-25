@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <map>
 #include <algorithm>
+#include <chrono>
 
 #include "src/graph.hpp"
 #include "src/graph_builder.hpp"
@@ -15,17 +16,28 @@
 
 int main(int argc, char *argv[])
 {
-    int N;
-    const auto raw_edges = parse_csv("./input/mock/generated_graph.csv", N);
-    int s = 0;
-    int t = N - 1;
+
+    // [TIMER] Start Graph Read
+    auto start_io = std::chrono::high_resolution_clock::now();
+
+    int N, s, t;
+    // const auto raw_edges = parse_csv("./helpers/format_convertors/graph_output.csv", N);
+    const auto raw_edges = parse_csv("./input/mock/generated_graph.csv", N, s, t);
+
+    // [TIMER] End Graph Read
+    auto end_io = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> io_duration = end_io - start_io;
 
     std::cout << "Parsed graph with " << N << " vertices. Source is " << s << " and sink is " << t << ".\n";
+    std::cout << ">> IO Time (CSV Read): " << io_duration.count() << " seconds.\n";
 
     Kokkos::initialize(argc, argv);
     {
         using Device = Kokkos::DefaultExecutionSpace;
         std::cout << "\nKokkos initialized on: " << typeid(Device).name() << "\n";
+
+        // [TIMER] Start Graph Init
+        Kokkos::Timer timer;
 
         // build graph on device
         auto g = GraphBuilder::build_graph<Device>(raw_edges, N, s, t);
@@ -33,6 +45,12 @@ int main(int argc, char *argv[])
         // kick of the algorithm
         // (push from S, add neighbours to intial queue)
         initialize_algorithm(g, s, t, N);
+
+        // [TIMER] End Graph Init
+        // NOTE: -- There is Kokkos::Fence in initialize_algorithm
+        // so reading time here is always after its done
+        double time_init = timer.seconds();
+        std::cout << ">> Graph Build & Init Time: " << time_init << " seconds.\n";
 
 #ifdef DEBUG_PRINT_ON_HOST
         // HOST MIRRORS=================================================
@@ -116,14 +134,20 @@ int main(int argc, char *argv[])
         size_t h_current_q_size = 0;
         const long long gr_trigger = 12 * N + 2 * g.num_edges();
         long long work_since_last_gr = 0;
+#ifdef DEBUG_PRINT_ON_HOST
         std::cout << "GLOBAL RELABEL TRIGGER = " << gr_trigger << "\n";
-
+#endif
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
+#ifdef DEBUG_PRINT_ON_HOST
         std::cout << "\n[STARTING ALGORITHM] Initial Active Nodes: " << h_current_q_size << "\n";
+#endif
 
 #ifdef DEBUG_PRINT_ON_HOST
         print_state("INITIAL STATE", h_current_q_size, false, final_excess);
 #endif
+
+        // [TIMER] Start Algorithm
+        timer.reset();
 
         while (h_current_q_size > 0)
         {
@@ -405,7 +429,14 @@ int main(int argc, char *argv[])
             iteration++;
         }
 
+        // [TIMER] End Algorithm
+        Kokkos::fence();
+        double time_algo = timer.seconds();
+
         std::cout << "\n[FINISHED] Total Iterations: " << iteration << "\n";
+        std::cout << ">> Algorithm Runtime: " << time_algo << " seconds.\n";
+        std::cout << "------------------------------------------\n";
+        std::cout << "TOTAL Runtime (IO + Init + Algo): " << (io_duration.count() + time_init + time_algo) << " seconds.\n";
 
         // print from device
         // single thread launched to just print flow

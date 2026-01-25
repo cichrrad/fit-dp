@@ -1,62 +1,89 @@
 # generator.rb
-require 'csv'
+require 'set'
 
-def generate_graph(filename, num_nodes, density, max_cap, bidirectional)
+def generate_graph(filename, num_nodes, density, max_cap, source, sink, bidirectional)
+  abort 'Error: Invalid Source/Sink configuration.' if source == sink || source >= num_nodes || sink >= num_nodes
+
+  # O(1)
+  existing_edges = Set.new
   edges = []
 
-  # We force a path from 0 to N-1 to guarantee the graph isn't broken.
-  nodes = (0...num_nodes).to_a.shuffle
+  # force s - t connection
+  intermediates = (0...num_nodes).to_a - [source, sink]
+  path_nodes = [source] + intermediates.shuffle + [sink]
 
-  (0...num_nodes - 1).each do |i|
-    u = nodes[i]
-    v = nodes[i + 1]
+  (0...path_nodes.length - 1).each do |i|
+    u = path_nodes[i]
+    v = path_nodes[i + 1]
     cap = rand(1..max_cap)
+
     edges << [u, v, cap]
-    edges << [v, u, cap] if bidirectional
+    existing_edges.add([u, v])
+
+    if bidirectional
+      edges << [v, u, cap]
+      existing_edges.add([v, u])
+    end
   end
 
+  # Fill the rest of the graph to meet density
   target_edges = (num_nodes * (num_nodes - 1) * density).to_i
 
-  current_count = edges.length
+  # Safety break
+  attempts = 0
+  max_attempts = target_edges * 10
 
-  while current_count < target_edges
+  while edges.length < target_edges && attempts < max_attempts
+    attempts += 1
     u = rand(0...num_nodes)
     v = rand(0...num_nodes)
 
-    # Avoid self-loops
     next if u == v
-
-    next if edges.any? { |e| e[0] == u && e[1] == v }
+    next if existing_edges.include?([u, v])
 
     cap = rand(1..max_cap)
+
     edges << [u, v, cap]
+    existing_edges.add([u, v])
 
-    if bidirectional
-      cap_reverse = rand(1..max_cap)
-      edges << [v, u, cap_reverse]
-    end
+    next unless bidirectional && edges.length < target_edges
 
-    current_count = edges.length
+    rev_cap = rand(1..max_cap)
+    edges << [v, u, rev_cap]
+    existing_edges.add([v, u])
   end
 
+  # Write to CSV
   File.open(filename, 'w') do |f|
+    f.puts "#{source} #{sink} -1 #SOURCE SINK HEADER"
+
     edges.each do |u, v, w|
       f.puts "#{u} #{v} #{w}"
     end
   end
 
-  puts "Generated #{filename}: #{num_nodes} nodes, #{edges.length} edges."
+  puts "Generated #{filename}:"
+  puts "Source:   #{source}"
+  puts "Sink:     #{sink}"
+  puts "Size:     #{num_nodes}"
+  puts "Edges:    #{edges.size}"
+  puts "Dens:     #{density}"
+  puts "Bidir:    #{bidirectional}"
 end
 
 # --- CONFIGURATION ---
-NUM_NODES = rand(2..51)
-DENSITY = rand(1..10).to_f * 0.1
-MAX_CAP = rand(1..2048)
-BIDIRECTIONAL = rand(1..3) == 2
+NUM_NODES = rand(5..200)
+# Ensure Source and Sink are distinct and within bounds
+SOURCE_ID = ENV['SOURCE'].to_i if ENV['SOURCE'].to_i < NUM_NODES - 1
+SOURCE_ID ||= 0
 
-puts "NODES -- #{NUM_NODES}"
-puts "DENSITY -- #{DENSITY}"
-puts "MAX_CAP -- #{MAX_CAP}"
-puts "BIDIRECTIONAL -- #{BIDIRECTIONAL}"
+SINK_ID = ENV['SINK'].to_i if ENV['SINK'].to_i < NUM_NODES && ENV['SINK'].to_i != SOURCE_ID
+SINK_ID ||= NUM_NODES - 1
 
-generate_graph('../../input/mock/generated_graph.csv', NUM_NODES, DENSITY, MAX_CAP, BIDIRECTIONAL)
+DENSITY = rand(1..9) * 0.1
+MAX_CAP = rand(1..40_000)
+BIDIRECTIONAL = rand(0..1).positive?
+
+output_file = '../../input/mock/generated_graph.csv'
+
+generate_graph(output_file, NUM_NODES, DENSITY, MAX_CAP, SOURCE_ID, SINK_ID, BIDIRECTIONAL)

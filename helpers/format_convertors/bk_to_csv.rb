@@ -5,7 +5,7 @@ def convert_bk_to_csv(bk_file_path, csv_file_path)
 
   max_node_id = 0
 
-  # --- PASS 1: Find the maximum node ID ---
+  # Find the maximum node ID
   # We need to scan first to safely assign Source and Sink IDs higher than any existing node.
   File.foreach(bk_file_path) do |line|
     parts = line.split
@@ -29,7 +29,7 @@ def convert_bk_to_csv(bk_file_path, csv_file_path)
   puts "  Max ID found: #{max_node_id}"
   puts "  Assigned Source: #{source_id}, Sink: #{sink_id}"
 
-  # --- PASS 2: Read and Write to CSV ---
+  # Read and Write to CSV
   edge_count = 0
 
   File.open(csv_file_path, 'w') do |f_out|
@@ -104,19 +104,19 @@ end
 input_dir = ARGV[0]
 output_dir = ARGV[1]
 
-# 1. Validate Input Directory
+# Validate Input Directory
 unless Dir.exist?(input_dir)
   puts "Error: Input directory '#{input_dir}' does not exist."
   exit 1
 end
 
-# 2. Create Output Directory (mkdir -p)
+# Create Output Directory
 unless Dir.exist?(output_dir)
   puts "Creating output directory: #{output_dir}"
   FileUtils.mkdir_p(output_dir)
 end
 
-# 3. Process Files
+# Process Files
 files = Dir.glob(File.join(input_dir, '*')).select { |f| File.file?(f) }
 puts "Found #{files.length} files in #{input_dir}"
 

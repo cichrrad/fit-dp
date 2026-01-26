@@ -141,7 +141,6 @@ if File.exist?(file_path)
   # [TIMER] End Load
   t_end_load = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-  puts "Validating: #{file_path}"
   puts "Source: #{solver.source}, Sink: #{solver.sink}, Nodes: #{solver.num_nodes}"
   puts ">> Graph Load & Build Time: #{(t_end_load - t_start_load).round(6)} seconds."
 

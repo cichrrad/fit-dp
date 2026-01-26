@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     auto end_io = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> io_duration = end_io - start_io;
 
-    std::cout << "Parsed graph with " << N << " vertices. Source is " << s << " and sink is " << t << ".\n";
+    std::cout << "Parsed graph with " << N << " vertices and "<< raw_edges.size() <<" edges. Source is " << s << " and sink is " << t << ".\n";
     std::cout << ">> IO Time (CSV Read): " << io_duration.count() << " seconds.\n";
 
     Kokkos::initialize(argc, argv);
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
                                         // to attempt to push to them
 
                                         // break;
-                                        continue;
+                                        continue; // seems to work as expected
                                     }
                                 }
                             }

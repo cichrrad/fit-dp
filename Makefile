@@ -114,3 +114,75 @@ batch_run:
 		echo "----------------------------------------" >> batch_run.log; \
 	done
 	@echo "Batch run complete. Results saved in batch_run.log"
+
+
+# Define the absolute path to the root to keep file references safe
+ROOT_DIR := $(CURDIR)
+LOG_FILE := $(ROOT_DIR)/baseline_batch.log
+
+.PHONY: batch_benchmark
+batch_benchmark:
+	@echo "Starting batch processing..."
+	@# Find all csv files in subdirectories of input/data
+	@find input/data -name "*.csv" | while read -r csv_rel_path; do \
+		# ---------------------------------------------------------; \
+		# SETUP VARIABLES; \
+		# ---------------------------------------------------------; \
+		csv_abs_path="$(ROOT_DIR)/$$csv_rel_path"; \
+		filename=$$(basename "$$csv_rel_path"); \
+		basename=$${filename%.*}; \
+		dimacs_file="$(ROOT_DIR)/helpers/format_convertors/$$basename.dimacs"; \
+		pbbs_file="$(ROOT_DIR)/reference_implementations/pbbs-maxflow/$$basename.pbbs"; \
+		\
+		echo "Processing: $$csv_rel_path"; \
+		\
+		# ---------------------------------------------------------; \
+		# STEP 0: Logging header; \
+		# ---------------------------------------------------------; \
+		echo "==================================================" >> $(LOG_FILE); \
+		echo "PROCESSING FILE: $$csv_rel_path" >> $(LOG_FILE); \
+		du -h "$$csv_abs_path" >> $(LOG_FILE); \
+		\
+		# ---------------------------------------------------------; \
+		# STEP 1: Copy to mock; \
+		# ---------------------------------------------------------; \
+		# Use absolute paths for safety; \
+		cp "$$csv_abs_path" "$(ROOT_DIR)/input/mock/generated_graph.csv"; \
+		\
+		echo "KNFS_RUN" >> $(LOG_FILE); \
+		# ---------------------------------------------------------; \
+		# STEP 2: Make run; \
+		# ---------------------------------------------------------; \
+		# Use -C to tell make exactly where to run (root); \
+		$(MAKE) -C "$(ROOT_DIR)" run >> $(LOG_FILE) 2>&1; \
+		\
+		# ---------------------------------------------------------; \
+		# STEP 3 & 4: Ruby conversion (Run in subshell); \
+		# ---------------------------------------------------------; \
+		(cd "$(ROOT_DIR)/helpers/format_convertors" && \
+		ruby csv_to_dimacs.rb "$$csv_abs_path" > "$$dimacs_file"); \
+		\
+		echo "HIPR4_RUN" >> $(LOG_FILE); \
+		# ---------------------------------------------------------; \
+		# STEP 5 & 6: HIPR4 (Run in subshell); \
+		# ---------------------------------------------------------; \
+		(cd "$(ROOT_DIR)/reference_implementations/hipr4dimacs" && \
+		./hipr4 < "$$dimacs_file" >> $(LOG_FILE) 2>&1); \
+		\
+		echo "HPF_RUN" >> $(LOG_FILE); \
+		# ---------------------------------------------------------; \
+		# STEP 7 & 8: HPF (Run in subshell); \
+		# ---------------------------------------------------------; \
+		(cd "$(ROOT_DIR)/reference_implementations/hpf" && \
+		./pseudo_fifo < "$$dimacs_file" >> $(LOG_FILE) 2>&1); \
+		\
+		echo "PBBS_RUN" >> $(LOG_FILE); \
+		# ---------------------------------------------------------; \
+		# STEP 9, 10, 11: PBBS Maxflow (Run in subshell); \
+		# ---------------------------------------------------------; \
+		(cd "$(ROOT_DIR)/reference_implementations/pbbs-maxflow" && \
+		./dimacsToFlowGraph "$$dimacs_file" "$$pbbs_file" && \
+		./maxFlow_syncPar "$$pbbs_file" >> $(LOG_FILE) 2>&1); \
+		\
+	done
+	@echo "Batch processing complete. Check $(LOG_FILE) for details."

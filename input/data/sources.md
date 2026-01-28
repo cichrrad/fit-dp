@@ -1,11 +1,3 @@
-# Graphs used in Baumstark Et al. 2015
-
-* [`nlpkkt240`](https://sparse.tamu.edu/Schenk/nlpkkt240)
-
-
-
-# Other
-
 * [Handful of solvers AND worst-case generators for MF algorithms](https://github.com/leonard-weininger/worst-case-max-flow/tree/main/algorithms)
 
 * [10th DIMACS downloads](https://sites.cc.gatech.edu/dimacs10/downloads.shtml)

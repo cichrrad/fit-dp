@@ -3,7 +3,7 @@ build:
 	mkdir -p build && cd build && cmake .. && cmake .. && make && cp knfs ../knfs && cd ../
 
 clean:
-	rm -rf build && mkdir build && cmake -B build -S . && cmake -B build -S . && cmake --build build && cp build/knfs knfs
+	rm -rf build && mkdir build && cmake -B build -S . -DCMAKE_BUILD_TYPE=Release && cmake -B build -S . -DCMAKE_BUILD_TYPE=Release && cmake --build build -- VERBOSE=1 && cp build/knfs knfs
 
 run:
 	export OMP_PROC_BIND=spread && export OMP_PLACES=threads && ./knfs

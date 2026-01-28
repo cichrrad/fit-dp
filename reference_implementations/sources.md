@@ -3,6 +3,7 @@
 ## Sequential
 
 [X] [`hpf`](https://riot.ieor.berkeley.edu/Applications/Pseudoflow/maxflow.html)
+    - takes .dimacs stdin (piping), has 4 modes
 
 [X] [`hi_pr` (no direct link, paper hunted down copy in another project)](https://code.google.com/archive/p/pmaxflow/source/default/source)
 

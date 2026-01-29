@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     {
         using Device = Kokkos::DefaultExecutionSpace;
         std::cout << "\nKokkos initialized on: " << typeid(Device).name() << "\n";
-
+        
         // [TIMER] Start Graph Init
         Kokkos::Timer timer;
 

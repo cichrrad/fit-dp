@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
                     // removed -- should still work fine ?
 
                     // enqueue Self if still active
-                    if (e_u > 0 /*|| d_u_current > d_u_start*/)
+                    if (e_u > 0 || d_u_current > d_u_start)
                     {
                         int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
                         if (seen_mask != next_iter_mask)

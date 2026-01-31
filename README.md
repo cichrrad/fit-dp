@@ -24,3 +24,10 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 2.  **Implementation:** Implement the Synchronous Parallel Push-Relabel (PRSN) algorithm using the **Kokkos ecosystem**. The implementation must be designed to compile for multiple backends (e.g., CPU via OpenMP/Threads, GPU via CUDA/HIP) from a single source codebase.
 3.  **Performance Evaluation:** Benchmark the implementation on a representative set of large-scale graphs (e.g., real-world sparse matrices, small-world networks) to evaluate scalability and throughput.
 4.  **Comparative Study (optional):** Analyze the "abstraction penalty" (portability tax) and performance portability by comparing execution times and memory bandwidth utilization across different hardware architectures and, where feasible, against available reference implementations.
+
+
+---
+
+# Notes
+
+* `export KOKKOS_TOOLS_LIBS=./profile_tools/[TOOLNAME].so ; make run` for hooking up profiler tools

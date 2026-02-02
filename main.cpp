@@ -9,7 +9,7 @@
 #include "src/graph.hpp"
 #include "src/graph_builder.hpp"
 #include "src/initialize_algorithm.hpp"
-#include "src/preprocessing/csv_loader.hpp"
+#include "src/preprocessing/dimacs_loader.hpp"
 #include "src/global_relabel.hpp"
 
 // #define DEBUG_PRINT_ON_HOST
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     int N, s, t;
     // const auto raw_edges = parse_csv("./helpers/format_convertors/graph_output.csv", N);
-    const auto raw_edges = parse_csv("./input/mock/generated_graph.csv", N, s, t);
+    const auto raw_edges = parallel_load_dimacs("./input/mock/generated_graph.dimacs", N, s, t);
 
     // [TIMER] End Graph Read
     auto end_io = std::chrono::high_resolution_clock::now();

@@ -9,7 +9,7 @@ run:
 	export OMP_PROC_BIND=spread && export OMP_PLACES=threads && ./knfs
 
 run_generate_check:
-	cd helpers/lazy_check && ruby generator.rb && cd ../../ && make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../
+	cd helpers/lazy_check && ruby generator.rb && cd ../format_convertors/ && ruby csv_to_dimacs.rb ../../input/mock/generated_graph.csv > ../../input/mock/generated_graph.dimacs && cd ../../ && make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../
 
 run_check:
 	make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../

@@ -2,7 +2,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 
-LOG_FILE_PATH = '../../batch_run.log'  
+LOG_FILE_PATH = '../../logs/batch_run.log'  
 OUTPUT_DIR = 'bar_chart_outputs'            
 
 def parse_log_file(filepath):

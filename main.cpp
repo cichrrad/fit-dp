@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     auto start_io = std::chrono::high_resolution_clock::now();
 
     int N, s, t;
-    // const auto raw_edges = parse_csv("./helpers/format_convertors/graph_output.csv", N);
     const auto raw_edges = parallel_load_dimacs("./input/mock/generated_graph.dimacs", N, s, t);
 
     // [TIMER] End Graph Read

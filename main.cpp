@@ -9,7 +9,7 @@
 #include "src/graph.hpp"
 #include "src/graph_builder.hpp"
 #include "src/initialize_algorithm.hpp"
-#include "src/preprocessing/dimacs_loader.hpp"
+#include "src/preprocessing/dimacs_par_loader.hpp"
 #include "src/global_relabel.hpp"
 
 // #define DEBUG_PRINT_ON_HOST

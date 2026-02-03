@@ -72,7 +72,7 @@ def generate_graph(filename, num_nodes, density, max_cap, source, sink, bidirect
 end
 
 # --- CONFIGURATION ---
-NUM_NODES = rand(50..1000)
+NUM_NODES = rand(5..2000)
 # Ensure Source and Sink are distinct and within bounds
 SOURCE_ID = ENV['SOURCE'].to_i if ENV['SOURCE'].to_i < NUM_NODES - 1
 SOURCE_ID ||= 0

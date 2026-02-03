@@ -46,7 +46,7 @@ inline RawGraphData parse_dimacs_chunk(const char *start, const char *end, int t
 
     RawGraphData local_data;
 
-    // NOTE: -- / 21 here is an estimate of 'line size' to
+    // NOTE: -- / 20 here is an estimate of 'line size' to
     // prevent many reallocations -- 20 gives bytes per edge before
     // realloc
     size_t est_edges = (end - start) / 20;

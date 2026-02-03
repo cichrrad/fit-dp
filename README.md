@@ -31,3 +31,5 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 # Notes
 
 * `export KOKKOS_TOOLS_LIBS=./profile_tools/[TOOLNAME].so ; make run` for hooking up profiler tools
+
+* Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?

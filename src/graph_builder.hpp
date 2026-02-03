@@ -8,35 +8,13 @@
 #include <iostream>
 
 #include "graph.hpp"
-#include "preprocessing/raw_graph_data.hpp"
-
-struct TempEdge {
-    int u;
-    int v;
-    long long capacity;
-
-    KOKKOS_INLINE_FUNCTION
-    bool operator<(const TempEdge& other) const {
-        if (u != other.u) return u < other.u;
-        return v < other.v;
-    }
-    
-    KOKKOS_INLINE_FUNCTION
-    bool operator==(const TempEdge& other) const {
-        return u == other.u && v == other.v;
-    }
-    
-    KOKKOS_INLINE_FUNCTION
-    bool operator!=(const TempEdge& other) const {
-        return !(*this == other);
-    }
-};
+#include "preprocessing/graph_defs.hpp"
 
 class GraphBuilder {
 public:
     template <class DeviceType>
     static Graph<DeviceType> build_graph(
-        const RawGraphData& raw_data, 
+        const HostEdgeList& h_raw_edges,
         int num_nodes, 
         int source_node, 
         int sink_node
@@ -46,35 +24,33 @@ public:
         using TempView = Kokkos::View<TempEdge*, DeviceType>;
         using IntView = Kokkos::View<int*, DeviceType>;
 
-        size_t input_size = raw_data.size();
+        size_t input_size = h_raw_edges.extent(0);
         if (input_size == 0) throw std::runtime_error("Graph is empty.");
         
         // [HOST -> DEVICE]
+        // Allocate device memory -- 2x the # of edges for residuals
         size_t potential_size = input_size * 2;
-        TempView raw_edges("raw_edges_gpu", potential_size);
+        TempView raw_edges(Kokkos::ViewAllocateWithoutInitializing("raw_edges_gpu"), potential_size);
 
-        typename TempView::HostMirror h_raw_edges = Kokkos::create_mirror_view(raw_edges);
-        for (size_t i = 0; i < input_size; ++i) {
-            h_raw_edges(i) = { raw_data.u[i], raw_data.v[i], raw_data.capacity[i] };
-        }
-        
+        // copy the first half over
         Kokkos::deep_copy(
             Kokkos::subview(raw_edges, std::make_pair((size_t)0, input_size)), 
-            Kokkos::subview(h_raw_edges, std::make_pair((size_t)0, input_size))
+            h_raw_edges
         );
 
-        // [DEVICE] Symmetrize -- add inverse of each edge
+        // [DEVICE] Graph Construction
+        // Symmetrize -- add inverse of each edge (for i at i + input_size --> filling second half)
         Kokkos::parallel_for("Generate_Reverse_Edges", RangePolicy(0, input_size), 
             KOKKOS_LAMBDA(const int i) {
                 TempEdge e = raw_edges(i);
                 raw_edges(i + input_size) = { e.v, e.u, 0 };
         });
 
-        // [DEVICE] Sort
+        // Sort
         Kokkos::sort(raw_edges);
 
-        // [DEVICE] Deduplicate & Compress
-        IntView flags("edge_flags", potential_size);
+        // Deduplicate & Compress
+        IntView flags(Kokkos::ViewAllocateWithoutInitializing("edge_flags"), potential_size);
         Kokkos::parallel_for("Mark_Unique", RangePolicy(0, potential_size), 
             KOKKOS_LAMBDA(const int i) {
                 if (i == 0) {
@@ -84,7 +60,7 @@ public:
                 }
         });
 
-        IntView write_indices("write_indices", potential_size);
+        IntView write_indices(Kokkos::ViewAllocateWithoutInitializing("write_indices"), potential_size);
         
         // inclusive scan, so that duplicates have same idx
         Kokkos::parallel_scan("Scan_Indices", RangePolicy(0, potential_size), 
@@ -100,7 +76,7 @@ public:
         Kokkos::deep_copy(total_edges, Kokkos::subview(write_indices, last_idx));
         total_edges += 1; // 0-based index to count
 
-        // [DEVICE] Allocate fields
+        // Allocate fields
         Graph<DeviceType> g;
         g.row_map = typename Graph<DeviceType>::RowMapType("row_map", num_nodes + 1);
         g.entries = typename Graph<DeviceType>::EntriesType("entries", total_edges);
@@ -117,10 +93,10 @@ public:
         g.current_active = typename Graph<DeviceType>::EntriesType("curr_active", num_nodes);
         g.next_active = typename Graph<DeviceType>::EntriesType("next_active", num_nodes);
 
-        IntView compressed_u("compressed_u", total_edges);
+        IntView compressed_u(Kokkos::ViewAllocateWithoutInitializing("compressed_u"), total_edges);
         Kokkos::deep_copy(g.residual_capacity, 0);
 
-        // [DEVICE] Populate
+        // Populate
         Kokkos::parallel_for("Populate_CSR_Data", RangePolicy(0, potential_size), 
             KOKKOS_LAMBDA(const int i) {
                 int idx = write_indices(i); 
@@ -135,7 +111,7 @@ public:
                 Kokkos::atomic_add(&g.residual_capacity(idx), raw_edges(i).capacity);
         });
 
-        // [DEVICE] Build Row Map
+        // Build Row Map
         Kokkos::deep_copy(g.row_map, 0);
         
         Kokkos::parallel_for("Histogram_Degrees", RangePolicy(0, total_edges), 
@@ -152,7 +128,7 @@ public:
                 if (final) g.row_map(i) = update;
         });
 
-        // [DEVICE] Link Reverse Edges
+        // Link Reverse Edges
         Kokkos::parallel_for("Find_Reverse_Edges", RangePolicy(0, total_edges), 
             KOKKOS_LAMBDA(const int i) {
                 int u = compressed_u(i);
@@ -181,7 +157,7 @@ public:
                 g.reverse_edge(i) = rev_idx;
         });
 
-        // [DEVICE] Init State
+        // Init State
         Kokkos::deep_copy(g.excess, 0);
         Kokkos::deep_copy(g.label, 0);
         Kokkos::deep_copy(g.new_label, 0);

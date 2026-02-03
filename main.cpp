@@ -17,6 +17,8 @@
 int main(int argc, char *argv[])
 {
 
+    Kokkos::initialize(argc, argv);
+    {
     // [TIMER] Start Graph Read
     auto start_io = std::chrono::high_resolution_clock::now();
 
@@ -30,8 +32,6 @@ int main(int argc, char *argv[])
     std::cout << "Parsed graph with " << N << " vertices and "<< raw_edges.size() <<" edges. Source is " << s << " and sink is " << t << ".\n";
     std::cout << ">> IO Time (CSV Read): " << io_duration.count() << " seconds.\n";
 
-    Kokkos::initialize(argc, argv);
-    {
         using Device = Kokkos::DefaultExecutionSpace;
         std::cout << "\nKokkos initialized on: " << typeid(Device).name() << "\n";
         

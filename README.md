@@ -35,3 +35,9 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 * Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?
 
 * [multi-node/GPU setup](https://github.com/kokkos/kokkos-remote-spaces)
+
+* better to use Kokkos::pair instead of std::pair (no gains, but better compat. on GPUs)
+
+* Investigate memory traits (Random access etc)
+
+* Scatter contribute ?

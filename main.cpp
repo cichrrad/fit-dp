@@ -443,7 +443,15 @@ int main(int argc, char *argv[])
         // single thread launched to just print flow
         // NOTE -- THIS WONT WORK ON GPUs -- WE NEED TO DEEP COPY 'g.added_excess(i) + g.excess(i)' ONTO HOST AND COUT
         // GOOD ENOUGH FOR NOW (OpenMP)
-        Kokkos::parallel_for("print_max_flow", Kokkos::RangePolicy<Device>(t, t + 1), KOKKOS_LAMBDA(const int &i) { std::cout << "MAX FLOW IS " << g.added_excess(i) + g.excess(i) << "\n"; });
+        // Kokkos::parallel_for("print_max_flow", Kokkos::RangePolicy<Device>(t, t + 1), KOKKOS_LAMBDA(const int &i) { std::cout << "MAX FLOW IS " << g.added_excess(i) + g.excess(i) << "\n"; });
+    
+        long long h_final_excess = 0;
+        long long h_final_added = 0;
+        Kokkos::deep_copy(h_final_excess, Kokkos::subview(g.excess, t));
+        Kokkos::deep_copy(h_final_added,  Kokkos::subview(g.added_excess, t));
+
+        std::cout << "MAX FLOW IS " << (h_final_excess + h_final_added) << "\n";
+    
     }
     Kokkos::finalize();
 }

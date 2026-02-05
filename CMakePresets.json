@@ -1,0 +1,55 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "cpu",
+      "displayName": "CPU (OpenMP + Native)",
+      "description": "Build for CPU with OpenMP and native arch optimizations",
+      "inherits": "base",
+      "cacheVariables": {
+        "Kokkos_ENABLE_OPENMP": "ON",
+        "Kokkos_ENABLE_CUDA": "OFF",
+        "Kokkos_ARCH_NATIVE": "ON"
+      }
+    },
+    {
+      "name": "gpu",
+      "displayName": "GPU (CUDA A100)",
+      "description": "Build for A100 GPU (Ampere80) with CUDA",
+      "inherits": "base",
+      "cacheVariables": {
+        "Kokkos_ENABLE_CUDA": "ON",
+        "Kokkos_ENABLE_OPENMP": "ON",
+        "Kokkos_ARCH_AMPERE80": "ON"
+      },
+      "environment": {
+        "CXX": "nvcc_wrapper" 
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "cpu",
+      "configurePreset": "cpu"
+    },
+    {
+      "name": "gpu",
+      "configurePreset": "gpu"
+    }
+  ]
+}

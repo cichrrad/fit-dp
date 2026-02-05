@@ -1,9 +1,20 @@
+# Default target
+all: cpu
 
-build:
-	mkdir -p build && cd build && cmake .. && cmake .. && make && cp knfs ../knfs && cd ../
+# Build for CPU (OpenMP)
+cpu:
+	cmake --preset cpu
+	cmake --build --preset cpu
+	cp build/cpu/knfs knfs
+
+# Build for GPU (CUDA A100)
+gpu:
+	cmake --preset gpu
+	cmake --build --preset gpu
+	cp build/gpu/knfs knfs
 
 clean:
-	rm -rf build && mkdir build && cmake -B build -S . -DCMAKE_BUILD_TYPE=Release && cmake -B build -S . -DCMAKE_BUILD_TYPE=Release && cmake --build build -- VERBOSE=1 && cp build/knfs knfs
+	rm -rf build
 
 run:
 	export OMP_PROC_BIND=spread && export OMP_PLACES=threads && ./knfs
@@ -74,118 +85,3 @@ stress_test:
 		echo "Cycle $$cycle complete: 100 checks passed."; \
 	done; \
 	echo "SUCCESS: All 100 global cycles (and 10000 total sub-checks) passed."
-
-
-
-batch_run:
-	@# Initialize/Clear the log file
-	@echo "Starting Batch Run at $$(date)" > batch_run.log
-	@echo "----------------------------------------" >> batch_run.log
-
-	@# Find all .csv files in input/data recursively
-	@find input/data -type f -name "*.csv" | while read -r csv_file; do \
-		echo "Processing: $$csv_file"; \
-		\
-		# 1. Copy the file to the mock location \
-		cp "$$csv_file" input/mock/generated_graph.csv; \
-		\
-		# 2. Run the check and capture output (stout and stderr) \
-		# We use '|| true' so the script doesn't abort if run_check returns an error code \
-		OUTPUT=$$(make run 2>&1 || true); \
-		\
-		# 3. Append Header and Output to log \
-		echo ">>> RUNNING: $$csv_file" >> batch_run.log; \
-		echo "$$OUTPUT" >> batch_run.log; \
-		\
-# 		# 4. Extract values for comparison \
-# 		# Pattern 1: "MAX FLOW: XXXXX" (Assuming value is the 3rd word) \
-# 		VAL1=$$(echo "$$OUTPUT" | grep -o "MAX FLOW: [0-9]*" | awk '{print $$3}'); \
-# 		# Pattern 2: "MAX FLOW IS XXXXX" (Assuming value is the 4th word) \
-# 		VAL2=$$(echo "$$OUTPUT" | grep -o "MAX FLOW IS [0-9]*" | awk '{print $$4}'); \
-# 		\
-# 		# 5. Compare values \
-# 		if [[ -n "$$VAL1" && -n "$$VAL2" ]]; then \
-# 			if [ "$$VAL1" != "$$VAL2" ]; then \
-# 				echo "" >> batch_run.log; \
-# 				echo "[!!! FLOW MISMATCH!!!] ($$VAL1 vs $$VAL2)" >> batch_run.log; \
-# 				echo "   -> Mismatch detected!"; \
-# 			fi \
-# 		else \
-# 			echo "   -> Warning: Could not parse flow values for comparison."; \
-# 			echo "[!!! PARSE ERROR !!!]" >> batch_run.log; \
-# 		fi; \
-		echo "----------------------------------------" >> batch_run.log; \
-	done
-	@echo "Batch run complete. Results saved in batch_run.log"
-
-
-# Define the absolute path to the root to keep file references safe
-ROOT_DIR := $(CURDIR)
-LOG_FILE := $(ROOT_DIR)/baseline_batch.log
-
-.PHONY: batch_benchmark
-batch_benchmark:
-	@echo "Starting batch processing..."
-	@# Find all csv files in subdirectories of input/data
-	@find input/data -name "*.csv" | while read -r csv_rel_path; do \
-		# ---------------------------------------------------------; \
-		# SETUP VARIABLES; \
-		# ---------------------------------------------------------; \
-		csv_abs_path="$(ROOT_DIR)/$$csv_rel_path"; \
-		filename=$$(basename "$$csv_rel_path"); \
-		basename=$${filename%.*}; \
-		dimacs_file="$(ROOT_DIR)/helpers/format_convertors/$$basename.dimacs"; \
-		pbbs_file="$(ROOT_DIR)/reference_implementations/pbbs-maxflow/$$basename.pbbs"; \
-		\
-		echo "Processing: $$csv_rel_path"; \
-		\
-		# ---------------------------------------------------------; \
-		# STEP 0: Logging header; \
-		# ---------------------------------------------------------; \
-		echo "==================================================" >> $(LOG_FILE); \
-		echo "PROCESSING FILE: $$csv_rel_path" >> $(LOG_FILE); \
-		du -h "$$csv_abs_path" >> $(LOG_FILE); \
-		\
-		# ---------------------------------------------------------; \
-		# STEP 1: Copy to mock; \
-		# ---------------------------------------------------------; \
-		# Use absolute paths for safety; \
-		cp "$$csv_abs_path" "$(ROOT_DIR)/input/mock/generated_graph.csv"; \
-		\
-		echo "KNFS_RUN" >> $(LOG_FILE); \
-		# ---------------------------------------------------------; \
-		# STEP 2: Make run; \
-		# ---------------------------------------------------------; \
-		# Use -C to tell make exactly where to run (root); \
-		$(MAKE) -C "$(ROOT_DIR)" run >> $(LOG_FILE) 2>&1; \
-		\
-		# ---------------------------------------------------------; \
-		# STEP 3 & 4: Ruby conversion (Run in subshell); \
-		# ---------------------------------------------------------; \
-		(cd "$(ROOT_DIR)/helpers/format_convertors" && \
-		ruby csv_to_dimacs.rb "$$csv_abs_path" > "$$dimacs_file"); \
-		\
-		echo "HIPR4_RUN" >> $(LOG_FILE); \
-		# ---------------------------------------------------------; \
-		# STEP 5 & 6: HIPR4 (Run in subshell); \
-		# ---------------------------------------------------------; \
-		(cd "$(ROOT_DIR)/reference_implementations/hipr4dimacs" && \
-		./hipr4 < "$$dimacs_file" >> $(LOG_FILE) 2>&1); \
-		\
-		echo "HPF_RUN" >> $(LOG_FILE); \
-		# ---------------------------------------------------------; \
-		# STEP 7 & 8: HPF (Run in subshell); \
-		# ---------------------------------------------------------; \
-		(cd "$(ROOT_DIR)/reference_implementations/hpf" && \
-		./pseudo_fifo < "$$dimacs_file" >> $(LOG_FILE) 2>&1); \
-		\
-		echo "PBBS_RUN" >> $(LOG_FILE); \
-		# ---------------------------------------------------------; \
-		# STEP 9, 10, 11: PBBS Maxflow (Run in subshell); \
-		# ---------------------------------------------------------; \
-		(cd "$(ROOT_DIR)/reference_implementations/pbbs-maxflow" && \
-		./dimacsToFlowGraph "$$dimacs_file" "$$pbbs_file" && \
-		./maxFlow_syncPar "$$pbbs_file" >> $(LOG_FILE) 2>&1); \
-		\
-	done
-	@echo "Batch processing complete. Check $(LOG_FILE) for details."

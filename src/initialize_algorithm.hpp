@@ -7,65 +7,65 @@
 template <class DeviceType>
 void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
 {
-
     using ExecutionSpace = typename DeviceType::execution_space;
     using RangePolicy = Kokkos::RangePolicy<ExecutionSpace>;
+    using ValueType = typename Graph<DeviceType>::ValueType;
 
-    // Set Initial Labels: d(s) = n
-    // NOTE: -- this might be better to do before moving onto the device
-    // to not have to launch kernel
-    // Kokkos::parallel_for("Init_Source_Label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
-    //     // g.label(t) = 0; // Already 0 from builder
-    //     g.label(s) = n;
-    // });
+    int s_row_start, s_row_end;
+    {
+        auto s_map_subview = Kokkos::subview(g.row_map, std::make_pair(s, s + 2));
+        auto h_s_map = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), s_map_subview);
+        s_row_start = h_s_map(0);
+        s_row_end = h_s_map(1);
+    }
 
-    // Saturate Source Edges
-    Kokkos::parallel_for("Saturate_Source_and_set_label", RangePolicy(0, 1), KOKKOS_LAMBDA(const int &) {
-        g.label(s) = n;
-        int start = g.row_map(s);
-        int end = g.row_map(s+1);
-        
-        int queue_idx = 0; // Local counter for this thread
+    Kokkos::deep_copy(Kokkos::subview(g.label, s), n);
 
-        for (int i = start; i < end; ++i) {
-            int v = g.entries(i);
-            long long cap = g.residual_capacity(i);
+    // Saturate Edges
+    long long total_pushed_from_s = 0;
 
+    Kokkos::parallel_reduce(
+        "Saturate_Source_Edges",
+        RangePolicy(s_row_start, s_row_end),
+        KOKKOS_LAMBDA(const int &edge_idx, long long &local_pushed_flow) {
+            
+            // Get edge target and capacity
+            int v = g.entries(edge_idx);
+            long long cap = g.residual_capacity(edge_idx);
+
+            // Technically not needed, as each edge is managed by 1 thread
+            // and hould have capacity as we just
+            // loaded the graph
             if (cap > 0) {
-                // Push Flow: s -> v
-                // Residual capacity s->v becomes 0
-                g.residual_capacity(i) = 0;
+                // Push Flow
+                g.residual_capacity(edge_idx) = 0;
 
                 // Update Reverse: v -> s
-                // Residual capacity v->s increases by 'cap'
-                int rev_idx = g.reverse_edge(i);
-                g.residual_capacity(rev_idx) += cap; 
-                // Note: No atomic needed for residual here, only 's' touches 's->v' 
-                // and 'v->s' is owned by 'v' which is inactive.
+                int rev_idx = g.reverse_edge(edge_idx);
+                g.residual_capacity(rev_idx) += cap;
+                // Update Excess at V
+                // NOTE: -- this can be done without atomics
+                // ONLY because we merged all edges u -> v into one
+                // in graph building process
+                // (else multiple threads might touch v)
+                g.excess(v) += cap;
 
-                // Update Excess
-                // s loses excess (doesn't matter much for s, but good accounting)
-                // v gains excess
-                // Direct update to v is safe because v is only a neighbor of s once (simple graph)
-                // or if multi-edge, this thread processes sequentially.
-                g.excess(v) += cap; 
-                // BIG OOPSIE, but we are on 1 thread so chill
-                g.excess(s) -= cap;
-
-                // Activate Neighbor 'v'
-                // We add v to 'current_active' because it now has excess > 0.
-                // We don't need to check existing excess because everyone started at 0.
                 if (v != s && v != t) {
-                    // Add to queue
-                    int q_pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
+                    // Add to current queue
+                    size_t q_pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
                     g.current_active(q_pos) = v;
-                    
-                    // Mark as active in the mask for iteration 0
-                    // Using iteration 1 ensures it's seen as "active in current round"
-                    g.active_iteration_mask(v) = 1; 
+
+                    // Mark as active in iteration mask for start of algo
+                    g.active_iteration_mask(v) = 1;
                 }
+
+                // Accumulate total flow pushed for the reduction
+                local_pushed_flow += cap;
             }
-        } });
+        },
+        total_pushed_from_s);
+
+    Kokkos::deep_copy(Kokkos::subview(g.excess, s), -total_pushed_from_s);
 
     Kokkos::fence();
 }

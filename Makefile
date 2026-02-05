@@ -15,7 +15,7 @@ run_check:
 	make run && cd helpers/lazy_check/ && ruby checker.rb && cd ../../
 
 compare:
-	make run_generate_check > tmp && rm tmp && echo "" && (echo "RESULTS FOR CURRENT" && make run && export OMP_PROC_BIND=spread && export OMP_PLACES=threads && echo "RESULTS FOR PAR:" && ./knfs_newer_but_old && export OMP_PROC_BIND=spread && export OMP_PLACES=threads && echo "RESULTS FOR OLD:" && ./knfs_old) | grep -e 'RESULTS FOR' -e 'FLOW' -e 'Time:'
+	make run_generate_check > tmp && cat tmp | grep -e "Size:" -e "Edges:" -e "Dens:" -e "With Deg:"  && rm tmp && echo "" && (echo "RESULTS FOR CURRENT" && make run && export OMP_PROC_BIND=spread && export OMP_PLACES=threads && echo "RESULTS FOR PAR:" && ./knfs_newer_but_old && export OMP_PROC_BIND=spread && export OMP_PLACES=threads && echo "RESULTS FOR OLD:" && ./knfs_old) | grep -e 'RESULTS FOR' -e 'FLOW' -e 'Time:'
 
 # Define the shell to ensure bash syntax (loops, etc.) works correctly
 SHELL := /bin/bash

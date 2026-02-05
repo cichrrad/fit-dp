@@ -54,16 +54,19 @@ def generate_graph(filename, num_nodes, density, max_cap, source, sink, bidirect
   end
 
   # Write to CSV
+  source_deg = 0
   File.open(filename, 'w') do |f|
     f.puts "#{source} #{sink} -1 #SOURCE SINK HEADER"
 
     edges.each do |u, v, w|
+      source_deg = source_deg.next if u == source
       f.puts "#{u} #{v} #{w}"
     end
   end
 
   puts "Generated #{filename}:"
   puts "Source:   #{source}"
+  puts "With Deg: #{source_deg}"
   puts "Sink:     #{sink}"
   puts "Size:     #{num_nodes}"
   puts "Edges:    #{edges.size}"
@@ -72,7 +75,7 @@ def generate_graph(filename, num_nodes, density, max_cap, source, sink, bidirect
 end
 
 # --- CONFIGURATION ---
-NUM_NODES = rand(5..2000)
+NUM_NODES = rand(1000..3000)
 # Ensure Source and Sink are distinct and within bounds
 SOURCE_ID = ENV['SOURCE'].to_i if ENV['SOURCE'].to_i < NUM_NODES - 1
 SOURCE_ID ||= 0

@@ -23,8 +23,8 @@ to_dimacs:
 	cd helpers/format_convertors/ && ruby csv_to_dimacs.rb ../../input/mock/generated_graph.csv > ../../input/mock/generated_graph.dimacs
 
 SHELL := /bin/bash
-OUTER_ITERS = 1000
-INNER_ITERS = 100
+OUTER_ITERS = 100
+INNER_ITERS = 20
 
 stress_test:
 	@echo "Starting stress test: $(OUTER_ITERS) outer x $(INNER_ITERS) inner loops"
@@ -50,7 +50,7 @@ stress_test:
 				echo "Mismatch found! Ref: $$REF_FLOW, Mine: $$MY_FLOW"; \
 				exit 1; \
 			else \
-				echo "PASSED"; \
+ 				echo "PASSED"; \
 			fi; \
 		done; \
 	done

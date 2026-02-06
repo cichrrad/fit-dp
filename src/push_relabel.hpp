@@ -10,29 +10,74 @@ template <class DeviceType>
 struct ProcessKernel
 {
     using ExecutionSpace = typename DeviceType::execution_space;
+    using MemorySpace = typename DeviceType::memory_space;
 
-    // Member Views (Capture by value = shallow copy of view)
-    Graph<DeviceType> g;
+    // Standard Views (Read/Write)
+    using ValueView = typename Graph<DeviceType>::ValueViewType;
+    using EntriesView = typename Graph<DeviceType>::EntriesType;
+    using LabelView = typename Graph<DeviceType>::LabelViewType;
+    using MaskView = typename Graph<DeviceType>::MaskViewType;
+
+    using ConstRandomAccessInt = Kokkos::View<const int *,
+                                              MemorySpace,
+                                              Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+    using ConstRandomAccessEdge = Kokkos::View<const int *,
+                                               MemorySpace,
+                                               Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+    // Member Variables
+    // We hold the RandomAccess versions of the read-only graph parts
+    ConstRandomAccessEdge row_map;
+    ConstRandomAccessInt entries;
+    ConstRandomAccessInt label;
+    ConstRandomAccessEdge reverse_edge;
+
+    // Standard R/W views
+    ValueView residual_capacity;
+    ValueView excess;
+    ValueView added_excess;
+    LabelView new_label;
+
+    EntriesView current_active;
+    EntriesView next_active;
+    Kokkos::View<size_t, DeviceType> next_queue_size;
+    MaskView active_iteration_mask;
+
     int next_iter_mask;
     int s, t, n;
 
-    ProcessKernel(Graph<DeviceType> _g, int _mask, int _s, int _t, int _n)
-        : g(_g), next_iter_mask(_mask), s(_s), t(_t), n(_n) {}
-
+    ProcessKernel(Graph<DeviceType> g, int _mask, int _s, int _t, int _n)
+        : row_map(g.row_map),           // Implicit conversion to RandomAccess
+          entries(g.entries),           // -||-
+          label(g.label),               // -||-
+          reverse_edge(g.reverse_edge), // -||-
+          // Standard copies for the rest
+          residual_capacity(g.residual_capacity),
+          excess(g.excess),
+          added_excess(g.added_excess),
+          new_label(g.new_label),
+          current_active(g.current_active),
+          next_active(g.next_active),
+          next_queue_size(g.next_queue_size),
+          active_iteration_mask(g.active_iteration_mask),
+          next_iter_mask(_mask), s(_s), t(_t), n(_n)
+    {
+    }
     // actual kernel
     KOKKOS_INLINE_FUNCTION
     void operator()(const int i, long long &l_work) const
     {
-        int u = g.current_active(i);
-        long long e_u = g.excess(u);
+        int u = current_active(i);
+        long long e_u = excess(u);
 
         // read-only snapshot Label
-        const int d_u_start = g.label(u);
+        const int d_u_start = label(u);
         int d_u_current = d_u_start;
 
         // edges
-        int row_start = g.row_map(u);
-        int row_end = g.row_map(u + 1);
+        int row_start = row_map(u);
+        int row_end = row_map(u + 1);
 
         // DISCHARGE LOOP
         while (e_u > 0)
@@ -53,12 +98,12 @@ struct ProcessKernel
             // --> Team policy / nested par. would be nice here
             for (int idx = row_start; idx < row_end; ++idx)
             {
-                int v = g.entries(idx);
-                long long cap = g.residual_capacity(idx);
+                int v = entries(idx);
+                long long cap = residual_capacity(idx);
 
                 if (cap > 0)
                 {
-                    int d_v = g.label(v);
+                    int d_v = label(v);
                     if (d_v < min_d_neighbor)
                         min_d_neighbor = d_v;
 
@@ -79,13 +124,13 @@ struct ProcessKernel
                             long long delta = (e_u < cap) ? e_u : cap;
 
                             // NOT ATOMIC
-                            g.residual_capacity(idx) -= delta;
-                            g.residual_capacity(g.reverse_edge(idx)) += delta;
+                            residual_capacity(idx) -= delta;
+                            residual_capacity(reverse_edge(idx)) += delta;
                             e_u -= delta;
 
                             // this still has to be atomic, beause other threads might
                             // be pushing INTO v;
-                            Kokkos::atomic_add(&g.added_excess(v), delta);
+                            Kokkos::atomic_add(&added_excess(v), delta);
 
                             // activate [v]
                             if (v != s && v != t)
@@ -110,7 +155,7 @@ struct ProcessKernel
                 break;
             if (skipped_admissible)
                 // Lost Conflict - Wait it out till next kernel run
-                break; 
+                break;
 
             // (local) RELABEL
             int new_d = min_d_neighbor + 1;
@@ -119,8 +164,8 @@ struct ProcessKernel
             if (new_d < 2 * n && new_d > d_u_start)
             {
                 d_u_current = new_d;
-                g.new_label(u) = new_d; // buffer the update
-                l_work += 12;           // relabel tax for heuristic
+                new_label(u) = new_d; // buffer the update
+                l_work += 12;         // relabel tax for heuristic
             }
             else
             {
@@ -130,7 +175,7 @@ struct ProcessKernel
         } // End Discharge Loop
 
         // write Back
-        g.excess(u) = e_u;
+        excess(u) = e_u;
 
         // re-activate self if excess remains
         if (e_u > 0)
@@ -143,11 +188,11 @@ struct ProcessKernel
     KOKKOS_INLINE_FUNCTION
     void activate_node(int v) const
     {
-        int seen = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
+        int seen = Kokkos::atomic_exchange(&active_iteration_mask(v), next_iter_mask);
         if (seen != next_iter_mask)
         {
-            size_t pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
-            g.next_active(pos) = v;
+            size_t pos = Kokkos::atomic_fetch_add(&next_queue_size(), 1);
+            next_active(pos) = v;
         }
     }
 };
@@ -170,7 +215,7 @@ struct ApplyKernel
         if (incoming > 0)
         {
             g.excess(u) += incoming;
-            g.added_excess(u) = 0; 
+            g.added_excess(u) = 0;
         }
 
         // commit label update
@@ -179,7 +224,7 @@ struct ApplyKernel
         if (d_prop > d_curr)
         {
             g.label(u) = d_prop;
-            // g.new_label(u) = 0; (MOVED TO GR) 
+            // g.new_label(u) = 0; (MOVED TO GR)
         }
     }
 };

@@ -22,6 +22,7 @@ generate_graph:
 to_dimacs:
 	cd helpers/format_convertors/ && ruby csv_to_dimacs.rb ../../input/mock/generated_graph.csv > ../../input/mock/generated_graph.dimacs
 
+
 SHELL := /bin/bash
 OUTER_ITERS = 1000
 INNER_ITERS = 100

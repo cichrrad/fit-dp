@@ -15,7 +15,7 @@ struct GlobalRelabel {
     static void run(Graph<DeviceType> &g, int t, int n)
     {
         
-        Kokkos::deep_copy(g.new_label, 0);
+        // Kokkos::deep_copy(g.new_label, 0);
         Kokkos::deep_copy(g.next_queue_size, 0);
 
         // Fused Init: Reset Labels to 'inf' (~ anything >= n) and setup sink at once

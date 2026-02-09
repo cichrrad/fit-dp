@@ -224,7 +224,7 @@ struct ApplyKernel
         if (d_prop > d_curr)
         {
             g.label(u) = d_prop;
-            // g.new_label(u) = 0; (MOVED TO GR)
+            g.new_label(u) = 0; //(MOVED TO GR)
         }
     }
 };

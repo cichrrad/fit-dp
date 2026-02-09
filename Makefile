@@ -4,11 +4,13 @@ cpu:
 	cmake --preset cpu
 	cmake --build --preset cpu
 	cp build/cpu/knfs knfs
+	cp knfs benchmarking/binaries/knfs_cpu
 
 gpu:
 	cmake --preset gpu
 	cmake --build --preset gpu
 	cp build/gpu/knfs knfs
+	cp knfs benchmarking/binaries/knfs_gpu
 
 clean:
 	rm -rf build

@@ -90,7 +90,8 @@ inline HostEdgeList parallel_load_dimacs(
     const std::string &filename,
     int &num_nodes,
     int &source,
-    int &sink)
+    int &sink,
+    unsigned int tc = 0)
 {
     int fd = open(filename.c_str(), O_RDONLY);
     if (fd == -1) throw std::runtime_error("Error opening file: " + filename);
@@ -161,7 +162,8 @@ inline HostEdgeList parallel_load_dimacs(
     }
 
     // Prepare Threads
-    unsigned int num_threads = std::thread::hardware_concurrency();
+    auto num_threads = std::thread::hardware_concurrency();
+    if (tc) num_threads = std::min(tc,num_threads);
     if (num_threads == 0) num_threads = 2;
     std::cout << "Loader using " << num_threads << " cores\n"; 
 

@@ -55,6 +55,7 @@ def convert(filename)
   end
 
   # Problem Line: p max NODES ARCS
+  puts 'c dummy comment'
   puts "p max #{num_nodes} #{num_arcs}"
 
   # Node Descriptors: n ID TYPE

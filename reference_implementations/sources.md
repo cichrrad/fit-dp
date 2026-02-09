@@ -26,3 +26,5 @@
 * [`ECL-MaxFlow` -- modern, CUDA native (tied with `ipccc25a.pdf` whitepaper)](https://github.com/burtscher/ECL-MaxFlow/)
 
 * [Gunrock (v1) Max Flow (`app/mf`)](https://github.com/gunrock/gunrock/tree/master)
+    * built with  `cmake .. -DCMAKE_CUDA_ARCHITECTURES=80`
+    * also need to install boost `sudo apt-get install libboost-all-dev`

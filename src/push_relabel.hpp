@@ -78,6 +78,7 @@ struct ProcessKernel
         // edges
         int row_start = row_map(u);
         int row_end = row_map(u + 1);
+        bool relabeled = false;
 
         // DISCHARGE LOOP
         while (e_u > 0)
@@ -166,6 +167,7 @@ struct ProcessKernel
                 d_u_current = new_d;
                 new_label(u) = new_d; // buffer the update
                 l_work += 12;         // relabel tax for heuristic
+                relabeled = true;
             }
             else
             {
@@ -177,8 +179,8 @@ struct ProcessKernel
         // write Back
         excess(u) = e_u;
 
-        // re-activate self if excess remains
-        if (e_u > 0)
+        // re-activate self if excess remains or relabeled
+        if (e_u > 0 || relabeled)
         {
             activate_node(u);
         }
@@ -224,7 +226,7 @@ struct ApplyKernel
         if (d_prop > d_curr)
         {
             g.label(u) = d_prop;
-            g.new_label(u) = 0; //(MOVED TO GR)
+            // g.new_label(u) = 0; //(CAN BE MOVED TO GR)
         }
     }
 };
@@ -292,7 +294,7 @@ public:
                     "PR_Apply",
                     Kokkos::RangePolicy<ExecutionSpace>(0, h_next_q_size),
                     a_kernel);
-                Kokkos::fence();
+                    Kokkos::fence();
             }
 
             // Swap Queues
@@ -303,6 +305,7 @@ public:
             h_current_q_size = h_next_q_size;
             iteration++;
         }
+        Kokkos::fence();
 
         // Calculate Result
         long long h_final_excess = 0;

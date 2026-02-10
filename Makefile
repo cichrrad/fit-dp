@@ -27,7 +27,6 @@ to_dimacs:
 SHELL := /bin/bash
 OUTER_ITERS = 1000
 INNER_ITERS = 100
-
 stress_test:
 	@echo "Starting stress test: $(OUTER_ITERS) outer x $(INNER_ITERS) inner loops"
 	@for (( i=1; i<=$(OUTER_ITERS); i++ )); do \

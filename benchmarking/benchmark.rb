@@ -216,15 +216,15 @@ dimacs_files.each do |d_path|
   end
 
   # 5. Threaded Solvers
-  ["knfs_gpu", "knfs_cpu"].each do |bin_base|
-    bin_path = File.join(DIRS["bin"], bin_base)
-    THREAD_COUNTS.each do |threads|
-      cmd = "#{bin_path} #{d_path} #{threads}"
-      (1..ITERATIONS).each do |i|
-        run_command(cmd, { binary: bin_base, graph_name: graph_name, iteration: i, threads: threads })
-      end
-    end
-  end
+  # ["knfs_gpu", "knfs_cpu"].each do |bin_base|
+  #   bin_path = File.join(DIRS["bin"], bin_base)
+  #   THREAD_COUNTS.each do |threads|
+  #     cmd = "#{bin_path} #{d_path} #{threads}"
+  #     (1..ITERATIONS).each do |i|
+  #       run_command(cmd, { binary: bin_base, graph_name: graph_name, iteration: i, threads: threads })
+  #     end
+  #   end
+  # end
 
 end
 

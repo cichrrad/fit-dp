@@ -27,7 +27,7 @@ struct GlobalRelabel {
                 g.current_queue_size() = 1; 
             } else {
                 // inf
-                g.label(v) = n;
+                g.label(v) = n+10;
             }
         });
         Kokkos::fence();
@@ -57,7 +57,7 @@ struct GlobalRelabel {
 
                     // If we can push flow v -> u
                     if (g.residual_capacity(rev_idx) > 0) {
-                        int expected = n;
+                        int expected = n+10;
                         // If v is unvisited, set label and enqueue
                         if (Kokkos::atomic_compare_exchange(&g.label(v), expected, dist + 1) == expected) {
                             int pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
@@ -83,7 +83,8 @@ struct GlobalRelabel {
         Kokkos::deep_copy(g.current_queue_size, 0);
         
         Kokkos::parallel_for("Rebuild_Active_Set", RangePolicy(0, n), KOKKOS_LAMBDA(const int v) {
-            if (v != s && v != t && g.excess(v) > 0 && g.label(v) < n) {
+            // anything but s/t with excess is active
+            if (v != s && v != t && g.excess(v) > 0) {
                 int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
                 g.current_active(pos) = v;
             } 

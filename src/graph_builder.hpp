@@ -41,7 +41,7 @@ public:
         // [DEVICE] Graph Construction
         // Symmetrize -- add inverse of each edge (for i at i + input_size --> filling second half)
         Kokkos::parallel_for("Generate_Reverse_Edges", RangePolicy(0, input_size), 
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 TempEdge e = raw_edges(i);
                 raw_edges(i + input_size) = { e.v, e.u, 0 };
         });
@@ -52,7 +52,7 @@ public:
         // Deduplicate & Compress
         IntView flags(Kokkos::ViewAllocateWithoutInitializing("edge_flags"), potential_size);
         Kokkos::parallel_for("Mark_Unique", RangePolicy(0, potential_size), 
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 if (i == 0) {
                     flags(i) = 1;
                 } else {
@@ -64,7 +64,7 @@ public:
         
         // inclusive scan, so that duplicates have same idx
         Kokkos::parallel_scan("Scan_Indices", RangePolicy(0, potential_size), 
-            KOKKOS_LAMBDA(const int i, int& update, const bool final) {
+            KOKKOS_LAMBDA(const size_t i, int& update, const bool final) {
                 update += flags(i);
                 if (final) {
                     write_indices(i) = update - 1; // Convert to 0-based index
@@ -98,7 +98,7 @@ public:
 
         // Populate
         Kokkos::parallel_for("Populate_CSR_Data", RangePolicy(0, potential_size), 
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 int idx = write_indices(i); 
                 
                 // Only FIRST thread of a duplicate group writes the topology
@@ -115,7 +115,7 @@ public:
         Kokkos::deep_copy(g.row_map, 0);
         
         Kokkos::parallel_for("Histogram_Degrees", RangePolicy(0, total_edges), 
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 int u = compressed_u(i);
                 if (u < num_nodes) {
                     Kokkos::atomic_inc(&g.row_map(u + 1));
@@ -123,14 +123,14 @@ public:
         });
 
         Kokkos::parallel_scan("Scan_RowMap", RangePolicy(0, num_nodes + 1), 
-            KOKKOS_LAMBDA(const int i, int& update, const bool final) {
+            KOKKOS_LAMBDA(const size_t i, int& update, const bool final) {
                 update += g.row_map(i);
                 if (final) g.row_map(i) = update;
         });
 
         // Link Reverse Edges
         Kokkos::parallel_for("Find_Reverse_Edges", RangePolicy(0, total_edges), 
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 int u = compressed_u(i);
                 int v = g.entries(i);
                 

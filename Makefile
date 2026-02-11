@@ -45,7 +45,7 @@ stress_test:
 			echo -ne "  Inner Iteration $$j: " ; \
 			MY_OUT=$$(make run | tail -n 2); \
 			MY_FLOW=$$(echo $$MY_OUT | grep -oP '(?<=MAX FLOW IS )\d+'); \
-			\
+			echo $$MY_FLOW ;\
 			if [ "$$REF_FLOW" != "$$MY_FLOW" ]; then \
 				echo "FAILED!"; \
 				echo "Mismatch found! Ref: $$REF_FLOW, Mine: $$MY_FLOW"; \

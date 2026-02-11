@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Max Flow Benchmark Results</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background: #f4f4f9; }
+    h1 { color: #333; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #333; color: white; position: sticky; top: 0; }
+    tr:hover { background-color: #f1f1f1; }
+    
+    /* Status Colors */
+    .match { background-color: #d4edda; color: #155724; } /* Green */
+    .mismatch { background-color: #f8d7da; color: #721c24; font-weight: bold; } /* Red */
+    .variance { background-color: #fff3cd; color: #856404; } /* Yellow */
+    .timeout { background-color: #e2e3e5; color: #6c757d; font-style: italic; } /* Grey */
+    
+    .legend { margin-bottom: 20px; padding: 10px; background: white; display: inline-block; border-radius: 5px; }
+    .dot { height: 10px; width: 10px; display: inline-block; border-radius: 50%; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <div class="legend">
+    <strong>Legend:</strong>
+    <span style="margin-left:15px"><span class="dot" style="background:#d4edda"></span>Agrees with Majority</span>
+    <span style="margin-left:15px"><span class="dot" style="background:#f8d7da"></span>Disagrees (Possible Bug)</span>
+    <span style="margin-left:15px"><span class="dot" style="background:#fff3cd"></span>Internal Variance</span>
+    <span style="margin-left:15px"><span class="dot" style="background:#e2e3e5"></span>Timeout</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Graph Name</th>
+        
+          <th>ECL_MaxFlow</th>
+        
+          <th>hipr4</th>
+        
+          <th>hpf_pseudo_fifo</th>
+        
+          <th>pbbs_syncpar</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BL06-camel-med.max.csv</td>
+          
+            
+            <td class="match">
+              348774508
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="match">
+              348774508
+            </td>
+          
+            
+            <td class="variance">
+              ⚠ 348774139, 348774208, 348774246, 348774133
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BL06-camel-sml.max.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 76324399, 76324160
+            </td>
+          
+            
+            <td class="match">
+              76324399
+            </td>
+          
+            
+            <td class="match">
+              76324399
+            </td>
+          
+            
+            <td class="match">
+              76324399
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BL06-gargoyle-med.max.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 97979938, 97979566
+            </td>
+          
+            
+            <td class="match">
+              97979938
+            </td>
+          
+            
+            <td class="match">
+              97979938
+            </td>
+          
+            
+            <td class="variance">
+              ⚠ 97979915, 97979916, 97979870, 97979550
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BL06-gargoyle-sml.max.csv</td>
+          
+            
+            <td class="match">
+              29696707
+            </td>
+          
+            
+            <td class="match">
+              29696707
+            </td>
+          
+            
+            <td class="match">
+              29696707
+            </td>
+          
+            
+            <td class="mismatch">
+              29696534
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BVZ-tsukuba5.csv</td>
+          
+            
+            <td class="match">
+              74372
+            </td>
+          
+            
+            <td class="match">
+              74372
+            </td>
+          
+            
+            <td class="match">
+              74372
+            </td>
+          
+            
+            <td class="variance">
+              ⚠ 74367, 74362, 74328
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BVZ-venus0.csv</td>
+          
+            
+            <td class="match">
+              360038
+            </td>
+          
+            
+            <td class="match">
+              360038
+            </td>
+          
+            
+            <td class="match">
+              360038
+            </td>
+          
+            
+            <td class="mismatch">
+              360034
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">BVZ-venus7.csv</td>
+          
+            
+            <td class="match">
+              266682
+            </td>
+          
+            
+            <td class="match">
+              266682
+            </td>
+          
+            
+            <td class="match">
+              266682
+            </td>
+          
+            
+            <td class="match">
+              266682
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">KZ2-venus18.csv</td>
+          
+            
+            <td class="match">
+              1099583
+            </td>
+          
+            
+            <td class="match">
+              1099583
+            </td>
+          
+            
+            <td class="match">
+              1099583
+            </td>
+          
+            
+            <td class="match">
+              1099583
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">KZ2-venus2.csv</td>
+          
+            
+            <td class="match">
+              1250964
+            </td>
+          
+            
+            <td class="match">
+              1250964
+            </td>
+          
+            
+            <td class="match">
+              1250964
+            </td>
+          
+            
+            <td class="match">
+              1250964
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">LB07-bunny-med.max.csv</td>
+          
+            
+            <td class="match">
+              3860022
+            </td>
+          
+            
+            <td class="match">
+              3860022
+            </td>
+          
+            
+            <td class="match">
+              3860022
+            </td>
+          
+            
+            <td class="match">
+              3860022
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">LB07-bunny-sml.max.csv</td>
+          
+            
+            <td class="match">
+              961163
+            </td>
+          
+            
+            <td class="match">
+              961163
+            </td>
+          
+            
+            <td class="match">
+              961163
+            </td>
+          
+            
+            <td class="match">
+              961163
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">ac.n1024.1163.shuf.csv</td>
+          
+            
+            <td class="match">
+              51032666
+            </td>
+          
+            
+            <td class="match">
+              51032666
+            </td>
+          
+            
+            <td class="match">
+              51032666
+            </td>
+          
+            
+            <td class="match">
+              51032666
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">ac.n4096.1163.shuf.csv</td>
+          
+            
+            <td class="match">
+              203889697
+            </td>
+          
+            
+            <td class="match">
+              203889697
+            </td>
+          
+            
+            <td class="match">
+              203889697
+            </td>
+          
+            
+            <td class="match">
+              203889697
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">adhead.n26c100.max.csv</td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="match">
+              0
+            </td>
+          
+            
+            <td class="variance">
+              ⚠ 105330310574896, 104099906122544, 111378517484336, 94052034020144, 96982660084528, 108987669177136, 105588588618544, 96923667321648, 94721488601904, 98490638254896
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">alue7065-33338-0013-096.csv</td>
+          
+            
+            <td class="match">
+              96
+            </td>
+          
+            
+            <td class="match">
+              96
+            </td>
+          
+            
+            <td class="match">
+              96
+            </td>
+          
+            
+            <td class="match">
+              96
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">bone.n6c10.max.csv</td>
+          
+            
+            <td class="match">
+              5454
+            </td>
+          
+            
+            <td class="match">
+              5454
+            </td>
+          
+            
+            <td class="match">
+              5454
+            </td>
+          
+            
+            <td class="match">
+              5454
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">bone_subx.n26c10.max.csv</td>
+          
+            
+            <td class="match">
+              0
+            </td>
+          
+            
+            <td class="match">
+              0
+            </td>
+          
+            
+            <td class="match">
+              0
+            </td>
+          
+            
+            <td class="match">
+              0
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">bone_subxyz.n6c100.max.csv</td>
+          
+            
+            <td class="match">
+              90645
+            </td>
+          
+            
+            <td class="match">
+              90645
+            </td>
+          
+            
+            <td class="match">
+              90645
+            </td>
+          
+            
+            <td class="match">
+              90645
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">bug.csv</td>
+          
+            
+            <td class="match">
+              101736300
+            </td>
+          
+            
+            <td class="match">
+              101736300
+            </td>
+          
+            
+            <td class="match">
+              101736300
+            </td>
+          
+            
+            <td class="match">
+              101736300
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">cal-1800721-0010-037.csv</td>
+          
+            
+            <td class="match">
+              37
+            </td>
+          
+            
+            <td class="match">
+              37
+            </td>
+          
+            
+            <td class="match">
+              37
+            </td>
+          
+            
+            <td class="match">
+              37
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">car_16bins.csv</td>
+          
+            
+            <td class="match">
+              249147
+            </td>
+          
+            
+            <td class="match">
+              249147
+            </td>
+          
+            
+            <td class="match">
+              249147
+            </td>
+          
+            
+            <td class="match">
+              249147
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">car_16bins.inc.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 14061111, 15370106, 18660602, 26493727, 14409440, 16141604, 14736696, 15933158, 24704628
+            </td>
+          
+            
+            <td class="match">
+              23435775
+            </td>
+          
+            
+            <td class="match">
+              23435775
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">comp2.csv</td>
+          
+            
+            <td class="match">
+              133664796
+            </td>
+          
+            
+            <td class="match">
+              133664796
+            </td>
+          
+            
+            <td class="match">
+              133664796
+            </td>
+          
+            
+            <td class="match">
+              133664796
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">cowInc0004L4_L2.inc.csv</td>
+          
+            
+            <td class="match">
+              395889859
+            </td>
+          
+            
+            <td class="match">
+              395889859
+            </td>
+          
+            
+            <td class="match">
+              395889859
+            </td>
+          
+            
+            <td class="match">
+              395889859
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">cowInc0005L4_L3.inc.csv</td>
+          
+            
+            <td class="match">
+              394294572
+            </td>
+          
+            
+            <td class="match">
+              394294572
+            </td>
+          
+            
+            <td class="match">
+              394294572
+            </td>
+          
+            
+            <td class="match">
+              394294572
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">crab.csv</td>
+          
+            
+            <td class="match">
+              615073953
+            </td>
+          
+            
+            <td class="match">
+              615073953
+            </td>
+          
+            
+            <td class="match">
+              615073953
+            </td>
+          
+            
+            <td class="match">
+              615073953
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">flamingo2.csv</td>
+          
+            
+            <td class="match">
+              239292496
+            </td>
+          
+            
+            <td class="match">
+              239292496
+            </td>
+          
+            
+            <td class="match">
+              239292496
+            </td>
+          
+            
+            <td class="match">
+              239292496
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">gardenInc0001L4_L3.inc.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 15051545, 15050765, 15050843, 15050735
+            </td>
+          
+            
+            <td class="match">
+              15045341
+            </td>
+          
+            
+            <td class="match">
+              15045341
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">gardenInc0004L4_L0.inc.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 15141762, 15139392, 15140952, 15141012, 15140982
+            </td>
+          
+            
+            <td class="match">
+              15138582
+            </td>
+          
+            
+            <td class="match">
+              15138582
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">gardenInc0004L4_L2.inc.csv</td>
+          
+            
+            <td class="variance">
+              ⚠ 15140044, 15139242
+            </td>
+          
+            
+            <td class="match">
+              15138462
+            </td>
+          
+            
+            <td class="match">
+              15138462
+            </td>
+          
+            
+            <td class="match">
+              15138462
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lazybrush-bird.max.csv</td>
+          
+            
+            <td class="match">
+              980970
+            </td>
+          
+            
+            <td class="match">
+              980970
+            </td>
+          
+            
+            <td class="match">
+              980970
+            </td>
+          
+            
+            <td class="match">
+              980970
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lazybrush-doctor.max.csv</td>
+          
+            
+            <td class="match">
+              368364
+            </td>
+          
+            
+            <td class="match">
+              368364
+            </td>
+          
+            
+            <td class="match">
+              368364
+            </td>
+          
+            
+            <td class="match">
+              368364
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lazybrush-footman.max.csv</td>
+          
+            
+            <td class="match">
+              1086484
+            </td>
+          
+            
+            <td class="match">
+              1086484
+            </td>
+          
+            
+            <td class="match">
+              1086484
+            </td>
+          
+            
+            <td class="match">
+              1086484
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lazybrush-hmdman.max.csv</td>
+          
+            
+            <td class="match">
+              1417835
+            </td>
+          
+            
+            <td class="match">
+              1417835
+            </td>
+          
+            
+            <td class="match">
+              1417835
+            </td>
+          
+            
+            <td class="match">
+              1417835
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lazybrush-mangadinner.max.csv</td>
+          
+            
+            <td class="match">
+              742897
+            </td>
+          
+            
+            <td class="match">
+              742897
+            </td>
+          
+            
+            <td class="match">
+              742897
+            </td>
+          
+            
+            <td class="match">
+              742897
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">liver.n26c10.max.csv</td>
+          
+            
+            <td class="match">
+              56739
+            </td>
+          
+            
+            <td class="match">
+              56739
+            </td>
+          
+            
+            <td class="match">
+              56739
+            </td>
+          
+            
+            <td class="match">
+              56739
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">lux-112498-0010-010.csv</td>
+          
+            
+            <td class="match">
+              10
+            </td>
+          
+            
+            <td class="match">
+              10
+            </td>
+          
+            
+            <td class="match">
+              10
+            </td>
+          
+            
+            <td class="match">
+              10
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">nj2010-165230-0018-143.csv</td>
+          
+            
+            <td class="match">
+              143
+            </td>
+          
+            
+            <td class="match">
+              143
+            </td>
+          
+            
+            <td class="match">
+              143
+            </td>
+          
+            
+            <td class="match">
+              143
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">nl-2159462-0276-041.csv</td>
+          
+            
+            <td class="match">
+              41
+            </td>
+          
+            
+            <td class="match">
+              41
+            </td>
+          
+            
+            <td class="match">
+              41
+            </td>
+          
+            
+            <td class="match">
+              41
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">pedestrians.inc.csv</td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="match">
+              158448834714
+            </td>
+          
+            
+            <td class="match">
+              158448834714
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">person_64bins.csv</td>
+          
+            
+            <td class="match">
+              170512
+            </td>
+          
+            
+            <td class="match">
+              170512
+            </td>
+          
+            
+            <td class="match">
+              170512
+            </td>
+          
+            
+            <td class="match">
+              170512
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">punch-eu22-06-p.csv</td>
+          
+            
+            <td class="match">
+              3143896
+            </td>
+          
+            
+            <td class="match">
+              3143896
+            </td>
+          
+            
+            <td class="match">
+              3143896
+            </td>
+          
+            
+            <td class="match">
+              3143896
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">punch-us18-01-u.csv</td>
+          
+            
+            <td class="match">
+              53
+            </td>
+          
+            
+            <td class="match">
+              53
+            </td>
+          
+            
+            <td class="match">
+              53
+            </td>
+          
+            
+            <td class="match">
+              53
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">punch-us18-08-p.csv</td>
+          
+            
+            <td class="match">
+              800884
+            </td>
+          
+            
+            <td class="match">
+              800884
+            </td>
+          
+            
+            <td class="match">
+              800884
+            </td>
+          
+            
+            <td class="match">
+              800884
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">punch-us20-03-p.csv</td>
+          
+            
+            <td class="match">
+              340306
+            </td>
+          
+            
+            <td class="match">
+              340306
+            </td>
+          
+            
+            <td class="match">
+              340306
+            </td>
+          
+            
+            <td class="match">
+              340306
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">punch-us22-09-u.csv</td>
+          
+            
+            <td class="match">
+              107
+            </td>
+          
+            
+            <td class="match">
+              107
+            </td>
+          
+            
+            <td class="match">
+              107
+            </td>
+          
+            
+            <td class="match">
+              107
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">rmf-long.n4.3142.shuf.csv</td>
+          
+            
+            <td class="match">
+              2414963
+            </td>
+          
+            
+            <td class="match">
+              2414963
+            </td>
+          
+            
+            <td class="match">
+              2414963
+            </td>
+          
+            
+            <td class="match">
+              2414963
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">rmf-wide.n2.3141.shuf.csv</td>
+          
+            
+            <td class="match">
+              20210626
+            </td>
+          
+            
+            <td class="match">
+              20210626
+            </td>
+          
+            
+            <td class="match">
+              20210626
+            </td>
+          
+            
+            <td class="match">
+              20210626
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">rmf-wide.n3.3141.shuf.csv</td>
+          
+            
+            <td class="match">
+              35760855
+            </td>
+          
+            
+            <td class="match">
+              35760855
+            </td>
+          
+            
+            <td class="match">
+              35760855
+            </td>
+          
+            
+            <td class="match">
+              35760855
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">videoSegA2.inc.csv</td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="match">
+              2121629360
+            </td>
+          
+            
+            <td class="match">
+              2121629360
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+        
+        <tr>
+          <td style="text-align:left; font-weight:bold;">videoSegB.inc.csv</td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+            
+            <td class="match">
+              2112367274
+            </td>
+          
+            
+            <td class="match">
+              2112367274
+            </td>
+          
+            
+            <td class="timeout">
+              TIMEOUT
+            </td>
+          
+        </tr>
+      
+    </tbody>
+  </table>
+  <p style="margin-top: 20px; color: #666; font-size: 0.9em;">Generated on 2026-02-11 07:33:34 +0000</p>
+</body>
+</html>

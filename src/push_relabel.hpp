@@ -5,6 +5,14 @@
 #include "graph.hpp"
 #include "global_relabel.hpp"
 
+#define DEBUG_TRACKING
+
+#ifdef DEBUG_TRACKING
+const int LOG_EVERY_X_ITERS = 10000;
+long long previous_residual = -1;
+#include "debug/debug_trackers.hpp"
+#endif
+
 // PROCESS (flow pushing & local relabels)
 template <class DeviceType>
 struct ProcessKernel
@@ -43,7 +51,7 @@ struct ProcessKernel
             l_work += (row_end - row_start);
 
             // ~inf
-            int min_d_neighbor = 2 * n;
+            long long min_d_neighbor = 2 * n;
             bool skipped_admissible = false;
 
             // scan over the edges
@@ -60,9 +68,11 @@ struct ProcessKernel
                 {
                     int d_v = g.label(v);
                     if (d_v < min_d_neighbor)
+                    {
                         min_d_neighbor = d_v;
+                    }
 
-                    // admissibility check
+                    // admissibility check (we must be uphill from v)
                     // (using local var for d_u -- this allows more pushes WITHOUT atomics! :))
                     if (d_u_current == d_v + 1)
                     {
@@ -110,12 +120,13 @@ struct ProcessKernel
                 break;
             if (skipped_admissible)
                 // Lost Conflict - Wait it out till next kernel run
-                break; 
+                break;
 
             // (local) RELABEL
-            int new_d = min_d_neighbor + 1;
+            long long new_d = min_d_neighbor + 1;
 
             //  check to ensure we don't wrap around or do useless work
+            // NOTE -- UNSAFE
             if (new_d < 2 * n && new_d > d_u_start)
             {
                 d_u_current = new_d;
@@ -170,7 +181,7 @@ struct ApplyKernel
         if (incoming > 0)
         {
             g.excess(u) += incoming;
-            g.added_excess(u) = 0; 
+            g.added_excess(u) = 0;
         }
 
         // commit label update
@@ -179,7 +190,7 @@ struct ApplyKernel
         if (d_prop > d_curr)
         {
             g.label(u) = d_prop;
-            // g.new_label(u) = 0; (MOVED TO GR) 
+            // g.new_label(u) = 0; (MOVED TO GR)
         }
     }
 };
@@ -193,6 +204,10 @@ public:
     {
 
         using ExecutionSpace = typename DeviceType::execution_space;
+
+#ifdef DEBUG_TRACKING
+        std::cout << "LOGGING EVERY " << LOG_EVERY_X_ITERS << " ITERATIONS" << "\n";
+#endif
 
         // Host control variables
         int iteration = 1;
@@ -215,7 +230,17 @@ public:
                 GlobalRelabel<DeviceType>::run(g, t, N);
                 GlobalRelabel<DeviceType>::rebuild_active_queue(g, s, t, N);
                 Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
-
+#ifdef DEBUG_TRACKING
+                if (iteration % LOG_EVERY_X_ITERS == 0)
+                {
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_GR", true, previous_residual);
+                }
+                else
+                {
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_GR", false, previous_residual);
+                }
+                Kokkos::fence();
+#endif
                 // If queue empty after GR (graph disconnected?), break
                 if (h_current_q_size == 0)
                     break;
@@ -235,6 +260,17 @@ public:
 
             work_since_last_gr += step_work;
             Kokkos::fence();
+#ifdef DEBUG_TRACKING
+            if (iteration % LOG_EVERY_X_ITERS == 0)
+            {
+                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process",true, previous_residual);
+            }
+            else
+            {
+                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process",false, previous_residual);
+            }
+            Kokkos::fence();
+#endif
 
             // APPLY Phase
             size_t h_next_q_size = 0;
@@ -249,7 +285,17 @@ public:
                     a_kernel);
                 Kokkos::fence();
             }
-
+#ifdef DEBUG_TRACKING
+            if (iteration % LOG_EVERY_X_ITERS == 0)
+            {
+                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply",true, previous_residual);
+            }
+            else
+            {
+                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply",false, previous_residual);
+            }
+            Kokkos::fence();
+#endif
             // Swap Queues
             std::swap(g.current_active, g.next_active);
             std::swap(g.current_queue_size, g.next_queue_size);
@@ -265,6 +311,12 @@ public:
         Kokkos::deep_copy(h_final_excess, Kokkos::subview(g.excess, t));
         Kokkos::deep_copy(h_final_added, Kokkos::subview(g.added_excess, t));
         final_max_flow = h_final_excess + h_final_added;
+#ifdef DEBUG_TRACKING
+        Kokkos::fence();
+        DebugTrackers<DeviceType>::run_all_debug_checks(g, "AFTER_CONVERGENCE",true, previous_residual);
+        std::cout << h_final_excess << " + " << h_final_added << " = " << final_max_flow << "\n";
+        Kokkos::fence();
+#endif
     }
 };
 

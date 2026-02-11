@@ -10,6 +10,12 @@
 #include "src/preprocessing/dimacs_par_loader.hpp"
 #include "src/push_relabel.hpp"
 
+#define DEBUG_VERIFY
+
+#ifdef DEBUG_VERIFY
+#include "src/debug/debug_verifier.hpp"
+#endif
+
 int main(int argc, char *argv[])
 {
 
@@ -61,9 +67,15 @@ int main(int argc, char *argv[])
         PushRelabelSolver<Device>::solve(g, s, t, N, max_flow);
         auto timerSOLVE = timer.seconds();
         std::cout << "SOLVE time:       " << timerSOLVE << " [s]\n";
+
         std::cout << "---------------------------------" << "\n";
         std::cout << "TOTAL TIME IS     " << timerIO + timerBUILD + timerINIT + timerSOLVE << " [s]\n";
         std::cout << "MAX FLOW IS       " << max_flow << "\n";
+
+#ifdef DEBUG_VERIFY
+        Verifier<Device>::check_excess_drained(g, s, t, N);
+        Verifier<Device>::check_optimality(g, s, t, N);
+#endif
     }
     Kokkos::finalize();
     return 0;

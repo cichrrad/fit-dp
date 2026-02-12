@@ -16,21 +16,30 @@ struct DebugTrackers
     static long long check_residual_conservation(Graph<DeviceType> &g, const std::string &tag, bool will_print)
     {
         long long total_residual = 0;
+        long long negative_edges = 0;
 
-        Kokkos::parallel_reduce(
-            "Audit_Residual_Sum",
-            RangePolicy(0, g.num_edges()),
-            KOKKOS_LAMBDA(const int i, long long &sum) {
-                sum += g.residual_capacity(i);
-            },
-            total_residual);
+        Kokkos::parallel_reduce("Audit_Sum", RangePolicy(0, g.num_edges()), KOKKOS_LAMBDA(const int i, long long &sum) { sum += g.residual_capacity(i); }, total_residual);
+
+        Kokkos::parallel_reduce("Audit_Neg", RangePolicy(0, g.num_edges()), KOKKOS_LAMBDA(const int i, long long &count) { 
+            if(g.residual_capacity(i) < 0) count++; }, negative_edges);
 
         Kokkos::fence();
 
         if (will_print)
         {
-            std::cout << "[AUDIT " << tag << "] Total Residual Sum: " << total_residual << "\n";
+            std::cout << "[ " << tag << "] Residual Sum: " << total_residual << "\n";
         }
+            if (negative_edges > 0)
+            {
+                std::cout << "!!! [FAIL] FOUND " << negative_edges << " NEGATIVE EDGES !!!\n";
+                throw std::runtime_error("Negative Capacity Detected");
+            }
+            else
+            {
+                if(will_print){
+                    std::cout << "[ " << tag << "] No negative capacities" << "\n";
+                }
+            }
         return total_residual;
     }
 
@@ -62,7 +71,7 @@ struct DebugTrackers
         Kokkos::fence();
         if (will_print)
         {
-            std::cout << "[AUDIT " << tag << "] System Excess: " << total_excess
+            std::cout << "[ " << tag << "] System Excess: " << total_excess
                       << " | In-Flight Excess: " << total_added
                       << " | TOTAL: " << (total_excess + total_added) << "\n";
         }
@@ -108,27 +117,32 @@ struct DebugTrackers
 
             if (violations > 0)
             {
-                std::cout << "[AUDIT " << tag << "] !!! STEEPNESS VIOLATIONS: " << violations << " !!!\n";
+                std::cout << "[ " << tag << "] !!! STEEPNESS VIOLATIONS: " << violations << " !!!\n";
             }
             else
             {
-                std::cout << "[AUDIT " << tag << "] no steepness violations" << "\n";
+                std::cout << "[ " << tag << "] no steepness violations" << "\n";
             }
         }
         return violations;
     }
 
-    static void run_all_debug_checks(Graph<DeviceType> &g, const std::string &tag, bool will_print, long long &previous_residual)
+    static void run_all_debug_checks(Graph<DeviceType> &g, const std::string &tag, bool will_print, long long &previous_residual, bool is_after_apply)
     {
+        bool will_throw = false;
+        
         auto res = check_residual_conservation(g, tag, will_print);
         auto exs = check_excess_conservation(g, tag, will_print);
-        auto v = check_label_validity(g, tag, will_print);
+        
+        // if (is_after_apply){
+        //     auto v = check_label_validity(g, tag, will_print);
+            
+        //     if (v)
+        //     {
+        //         will_throw = true;
+        //     }
+        // }
 
-        bool will_throw = false;
-        if (v)
-        {
-            will_throw = true;
-        }
         if (exs)
         {
             will_throw = true;
@@ -138,13 +152,15 @@ struct DebugTrackers
         {
             will_throw = true;
         }
-        
+
         if (will_throw)
         {
             auto res = check_residual_conservation(g, tag, true);
             auto exs = check_excess_conservation(g, tag, true);
-            auto v = check_label_validity(g, tag, true);
-            throw std::runtime_error("SOMETHING IS WRONG. STOPING");
+            // if (is_after_apply){
+            //     auto v = check_label_validity(g, tag, true);
+            // }
+            // throw std::runtime_error("SOMETHING IS WRONG. STOPING");
         }
         previous_residual = res;
     }

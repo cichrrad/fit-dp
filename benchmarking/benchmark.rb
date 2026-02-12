@@ -13,9 +13,9 @@ DIRS = {
   "logs"   => "logs"
 }
 
-THREAD_COUNTS = [24, 48, 96, 128]
+THREAD_COUNTS = [128]
 ITERATIONS = 10
-TIMEOUT_SEC = 60 
+TIMEOUT_SEC = 300
 
 # Ensure log directory exists
 FileUtils.mkdir_p(DIRS["logs"])

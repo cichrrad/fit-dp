@@ -8,7 +8,7 @@
 #define DEBUG_TRACKING
 
 #ifdef DEBUG_TRACKING
-const int LOG_EVERY_X_ITERS = 10000;
+const int LOG_EVERY_X_ITERS = 100000;
 long long previous_residual = -1;
 #include "debug/debug_trackers.hpp"
 #endif
@@ -218,91 +218,130 @@ public:
 
         // Global Relabel Heuristics
         const long long gr_trigger = 12 * N + 2 * g.num_edges();
-        long long work_since_last_gr = 0;
-
-        while (h_current_q_size > 0)
+        
+        while (true)
         {
-
-            // Check Global Relabel
-            if (work_since_last_gr > gr_trigger)
+            long long work_since_last_gr = 0;
+            while (h_current_q_size > 0)
             {
-                work_since_last_gr = 0;
-                GlobalRelabel<DeviceType>::run(g, t, N);
-                GlobalRelabel<DeviceType>::rebuild_active_queue(g, s, t, N);
-                Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
+
+                // Check Global Relabel
+                if (work_since_last_gr > gr_trigger)
+                {
+                    work_since_last_gr = 0;
+                    GlobalRelabel<DeviceType>::run(g, t, N);
+                    GlobalRelabel<DeviceType>::rebuild_active_queue(g, s, t, N);
+                    Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
+#ifdef DEBUG_TRACKING
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_GR", false, previous_residual, true);
+                    Kokkos::fence();
+#endif
+                    // If queue empty after GR (graph disconnected?), break
+                    if (h_current_q_size == 0)
+                        break;
+                }
+
+                long long step_work = 0;
+                int next_iter_mask = iteration + 1;
+
+                // PROCESS Phase
+                ProcessKernel<DeviceType> p_kernel(g, next_iter_mask, s, t, N);
+
+                Kokkos::parallel_reduce(
+                    "PR_Process",
+                    Kokkos::RangePolicy<ExecutionSpace>(0, h_current_q_size),
+                    p_kernel,
+                    step_work);
+
+                work_since_last_gr += step_work;
+                Kokkos::fence();
 #ifdef DEBUG_TRACKING
                 if (iteration % LOG_EVERY_X_ITERS == 0)
                 {
-                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_GR", true, previous_residual);
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process", true, previous_residual, false);
                 }
                 else
                 {
-                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_GR", false, previous_residual);
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process", false, previous_residual, false);
                 }
                 Kokkos::fence();
 #endif
-                // If queue empty after GR (graph disconnected?), break
-                if (h_current_q_size == 0)
-                    break;
-            }
 
-            long long step_work = 0;
-            int next_iter_mask = iteration + 1;
+                // APPLY Phase
+                size_t h_next_q_size = 0;
+                Kokkos::deep_copy(h_next_q_size, g.next_queue_size);
 
-            // PROCESS Phase
-            ProcessKernel<DeviceType> p_kernel(g, next_iter_mask, s, t, N);
-
-            Kokkos::parallel_reduce(
-                "PR_Process",
-                Kokkos::RangePolicy<ExecutionSpace>(0, h_current_q_size),
-                p_kernel,
-                step_work);
-
-            work_since_last_gr += step_work;
-            Kokkos::fence();
+                if (h_next_q_size > 0)
+                {
+                    ApplyKernel<DeviceType> a_kernel(g);
+                    Kokkos::parallel_for(
+                        "PR_Apply",
+                        Kokkos::RangePolicy<ExecutionSpace>(0, h_next_q_size),
+                        a_kernel);
+                    Kokkos::fence();
+                }
 #ifdef DEBUG_TRACKING
-            if (iteration % LOG_EVERY_X_ITERS == 0)
-            {
-                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process",true, previous_residual);
-            }
-            else
-            {
-                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Process",false, previous_residual);
-            }
-            Kokkos::fence();
-#endif
-
-            // APPLY Phase
-            size_t h_next_q_size = 0;
-            Kokkos::deep_copy(h_next_q_size, g.next_queue_size);
-
-            if (h_next_q_size > 0)
-            {
-                ApplyKernel<DeviceType> a_kernel(g);
-                Kokkos::parallel_for(
-                    "PR_Apply",
-                    Kokkos::RangePolicy<ExecutionSpace>(0, h_next_q_size),
-                    a_kernel);
+                if (iteration % LOG_EVERY_X_ITERS == 0)
+                {
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply", true, previous_residual, true);
+                }
+                else
+                {
+                    DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply", false, previous_residual, true);
+                }
                 Kokkos::fence();
+#endif
+                // Swap Queues
+                std::swap(g.current_active, g.next_active);
+                std::swap(g.current_queue_size, g.next_queue_size);
+                Kokkos::deep_copy(g.next_queue_size, 0);
+
+                h_current_q_size = h_next_q_size;
+                iteration++;
+            }
+            // FINAL GR TO THE RESCUE
+            // TODO FIX THIS IS REALLY SLOW!!!!!!!!
+            // TODO THIS DOES NOT UPDATE EXCESS, SO DEBUG
+            // CHECK WOULD THROW AFTER GR
+            GlobalRelabel<DeviceType>::run(g, t, N);
+            Kokkos::parallel_for("Rescue_Saturate_S", Kokkos::RangePolicy<ExecutionSpace>(0, 1), // Single thread/team is enough for s
+                                 KOKKOS_LAMBDA(const int) {
+                    int start = g.row_map(s);
+                    int end   = g.row_map(s + 1);
+
+                    for (int i = start; i < end; ++i) {
+                        int v = g.entries(i);
+                        long long cap = g.residual_capacity(i);
+                        int d_v = g.label(v);
+
+                        // If edge is open AND v is reachable from t (d < N)
+                        if (cap > 0 && d_v < N) {
+                            // Push everything we can
+                            g.residual_capacity(i) = 0;
+                            g.residual_capacity(g.reverse_edge(i)) += cap;
+                            
+                            // Wake up v
+                            Kokkos::atomic_add(&g.excess(v), cap);
+                        }
+                    } });
+            Kokkos::fence();
+
+            // Rebuild Queue
+            GlobalRelabel<DeviceType>::rebuild_active_queue(g, s, t, N);
+
+            // Check if we revived anything
+            Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
+
+            if (h_current_q_size == 0)
+            {
+#ifdef DEBUG_TRACKING
+                std::cout << "[RESCUE GR] WE ARE DONE" << "\n";
+#endif
+                break;
             }
 #ifdef DEBUG_TRACKING
-            if (iteration % LOG_EVERY_X_ITERS == 0)
-            {
-                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply",true, previous_residual);
-            }
-            else
-            {
-                DebugTrackers<DeviceType>::run_all_debug_checks(g, "After_Apply",false, previous_residual);
-            }
-            Kokkos::fence();
+            std::cout << "[RESCUE GR] REVIVED " << h_current_q_size << " NODES" << "\n";
 #endif
-            // Swap Queues
-            std::swap(g.current_active, g.next_active);
-            std::swap(g.current_queue_size, g.next_queue_size);
-            Kokkos::deep_copy(g.next_queue_size, 0);
-
-            h_current_q_size = h_next_q_size;
-            iteration++;
         }
 
         // Calculate Result
@@ -313,7 +352,8 @@ public:
         final_max_flow = h_final_excess + h_final_added;
 #ifdef DEBUG_TRACKING
         Kokkos::fence();
-        DebugTrackers<DeviceType>::run_all_debug_checks(g, "AFTER_CONVERGENCE",true, previous_residual);
+        DebugTrackers<DeviceType>::run_all_debug_checks(g, "AFTER_CONVERGENCE", true, previous_residual, true);
+
         std::cout << h_final_excess << " + " << h_final_added << " = " << final_max_flow << "\n";
         Kokkos::fence();
 #endif

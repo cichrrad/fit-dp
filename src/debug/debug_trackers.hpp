@@ -29,17 +29,18 @@ struct DebugTrackers
         {
             std::cout << "[ " << tag << "] Residual Sum: " << total_residual << "\n";
         }
-            if (negative_edges > 0)
+        if (negative_edges > 0)
+        {
+            std::cout << "!!! [FAIL] FOUND " << negative_edges << " NEGATIVE EDGES !!!\n";
+            throw std::runtime_error("Negative Capacity Detected");
+        }
+        else
+        {
+            if (will_print)
             {
-                std::cout << "!!! [FAIL] FOUND " << negative_edges << " NEGATIVE EDGES !!!\n";
-                throw std::runtime_error("Negative Capacity Detected");
+                std::cout << "[ " << tag << "] No negative capacities" << "\n";
             }
-            else
-            {
-                if(will_print){
-                    std::cout << "[ " << tag << "] No negative capacities" << "\n";
-                }
-            }
+        }
         return total_residual;
     }
 
@@ -130,18 +131,19 @@ struct DebugTrackers
     static void run_all_debug_checks(Graph<DeviceType> &g, const std::string &tag, bool will_print, long long &previous_residual, bool is_after_apply)
     {
         bool will_throw = false;
-        
+
         auto res = check_residual_conservation(g, tag, will_print);
         auto exs = check_excess_conservation(g, tag, will_print);
-        
-        // if (is_after_apply){
-        //     auto v = check_label_validity(g, tag, will_print);
-            
-        //     if (v)
-        //     {
-        //         will_throw = true;
-        //     }
-        // }
+        auto v = check_label_validity(g, tag, will_print);
+
+        if (is_after_apply)
+        {
+
+            if (v)
+            {
+                will_throw = true;
+            }
+        }
 
         if (exs)
         {
@@ -157,9 +159,7 @@ struct DebugTrackers
         {
             auto res = check_residual_conservation(g, tag, true);
             auto exs = check_excess_conservation(g, tag, true);
-            // if (is_after_apply){
-            //     auto v = check_label_validity(g, tag, true);
-            // }
+            auto v = check_label_validity(g, tag, true);
             // throw std::runtime_error("SOMETHING IS WRONG. STOPING");
         }
         previous_residual = res;

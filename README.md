@@ -32,12 +32,16 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 
 * `export KOKKOS_TOOLS_LIBS=./profile_tools/[TOOLNAME].so ; make run` for hooking up profiler tools
 
-* Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?
-
 * [multi-node/GPU setup](https://github.com/kokkos/kokkos-remote-spaces)
 
-* better to use Kokkos::pair instead of std::pair (no gains, but better compat. on GPUs)
+* Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?
 
 * Investigate memory traits (Random access etc)
 
 * Scatter contribute ?
+
+* `adhead.n26c100.max.csv` load
+
+* debug headers re-check
+
+* benchmarking

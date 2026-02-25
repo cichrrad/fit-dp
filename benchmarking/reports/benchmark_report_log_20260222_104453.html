@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Max Flow Solvers Table</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
+    h1 { color: #2c3e50; }
+    table { border-collapse: collapse; width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #cbd5e1; padding: 12px 15px; text-align: left; vertical-align: top; }
+    th { background-color: #f8fafc; font-weight: bold; color: #475569; }
+    
+    .match { background-color: #dcfce7; color: #166534; } 
+    .warning { background-color: #fef08a; color: #854d0e; } 
+    .error { background-color: #fee2e2; color: #991b1b; } 
+    .timeout-cell { background-color: #f1f5f9; color: #64748b; font-style: italic; } 
+    
+    .timeout-text { color: #ef4444; font-size: 0.85em; font-weight: bold; margin-left: 5px; }
+    .truth-match { font-weight: bold; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Max Flow Solvers table</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Graph Name</th>
+        
+          <th>hpf_pseudo_fifo (Truth)</th>
+        
+          <th>ECL_MaxFlow </th>
+        
+          <th>hipr4 </th>
+        
+          <th>pbbs_syncpar </th>
+        
+          <th>knfs_cpu </th>
+        
+          <th>knfs_gpu </th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td><strong>ac.n1024.1163.shuf.csv</strong></td>
+          
+            <td class="match">51032666</td>
+          
+            <td class="match">51032666</td>
+          
+            <td class="match">51032666</td>
+          
+            <td class="match">51032666</td>
+          
+            <td class="match">51032666</td>
+          
+            <td class="match">51032666</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>ac.n4096.1163.shuf.csv</strong></td>
+          
+            <td class="match">203889697</td>
+          
+            <td class="match">203889697</td>
+          
+            <td class="match">203889697</td>
+          
+            <td class="match">203889697</td>
+          
+            <td class="match">203889697</td>
+          
+            <td class="match">203889697</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>adhead.n26c100.max.csv</strong></td>
+          
+            <td class="match">0</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="warning">104195271394096 vs 101373986226992 vs 94745823982384 vs 99604256629552 vs 104592693445424 vs 107282719425328 vs 104549253374768 vs 105045759546160 vs 96099846054704 vs 100223792755504</td>
+          
+            <td class="match">0</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>alue7065-33338-0013-096.csv</strong></td>
+          
+            <td class="match">96</td>
+          
+            <td class="match">96</td>
+          
+            <td class="match">96</td>
+          
+            <td class="match">96</td>
+          
+            <td class="match">96</td>
+          
+            <td class="match">96</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BL06-camel-med.max.csv</strong></td>
+          
+            <td class="match">348774508</td>
+          
+            <td class="match">348774508</td>
+          
+            <td class="match">348774508</td>
+          
+            <td class="warning">348774246 vs 348774124 vs 348774208 vs 348773746</td>
+          
+            <td class="match">348774508</td>
+          
+            <td class="match">348774508</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BL06-camel-sml.max.csv</strong></td>
+          
+            <td class="match">76324399</td>
+          
+            <td class="warning"><span class='truth-match'>76324399</span> vs 76324160 vs 76324129</td>
+          
+            <td class="match">76324399</td>
+          
+            <td class="match">76324399</td>
+          
+            <td class="match">76324399</td>
+          
+            <td class="match">76324399</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BL06-gargoyle-med.max.csv</strong></td>
+          
+            <td class="match">97979938</td>
+          
+            <td class="match">97979938</td>
+          
+            <td class="match">97979938</td>
+          
+            <td class="warning">97979674 vs 97979819 vs 97979816 vs 97979915 vs 97979870 vs <span class='truth-match'>97979938</span> vs 97979571 vs 97979937 vs 97979869</td>
+          
+            <td class="match">97979938</td>
+          
+            <td class="match">97979938</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BL06-gargoyle-sml.max.csv</strong></td>
+          
+            <td class="match">29696707</td>
+          
+            <td class="warning"><span class='truth-match'>29696707</span> vs 29696705</td>
+          
+            <td class="match">29696707</td>
+          
+            <td class="error">29696534</td>
+          
+            <td class="match">29696707</td>
+          
+            <td class="match">29696707<span class='timeout-text'>(1 timeouts)</span></td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>bone.n6c10.max.csv</strong></td>
+          
+            <td class="match">5454</td>
+          
+            <td class="match">5454</td>
+          
+            <td class="match">5454</td>
+          
+            <td class="match">5454</td>
+          
+            <td class="match">5454</td>
+          
+            <td class="match">5454</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>bone_subx.n26c10.max.csv</strong></td>
+          
+            <td class="match">0</td>
+          
+            <td class="match">0</td>
+          
+            <td class="match">0</td>
+          
+            <td class="match">0</td>
+          
+            <td class="match">0</td>
+          
+            <td class="match">0</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>bone_subxyz.n6c100.max.csv</strong></td>
+          
+            <td class="match">90645</td>
+          
+            <td class="match">90645</td>
+          
+            <td class="match">90645</td>
+          
+            <td class="match">90645</td>
+          
+            <td class="match">90645</td>
+          
+            <td class="match">90645<span class='timeout-text'>(1 timeouts)</span></td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>bug.csv</strong></td>
+          
+            <td class="match">101736300</td>
+          
+            <td class="match">101736300</td>
+          
+            <td class="match">101736300</td>
+          
+            <td class="match">101736300</td>
+          
+            <td class="match">101736300</td>
+          
+            <td class="match">101736300</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BVZ-tsukuba5.csv</strong></td>
+          
+            <td class="match">74372</td>
+          
+            <td class="match">74372</td>
+          
+            <td class="match">74372</td>
+          
+            <td class="warning">74367 vs 74357 vs <span class='truth-match'>74372</span> vs 74328</td>
+          
+            <td class="match">74372</td>
+          
+            <td class="match">74372</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BVZ-venus0.csv</strong></td>
+          
+            <td class="match">360038</td>
+          
+            <td class="match">360038</td>
+          
+            <td class="match">360038</td>
+          
+            <td class="warning">360034 vs <span class='truth-match'>360038</span></td>
+          
+            <td class="match">360038</td>
+          
+            <td class="match">360038</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>BVZ-venus7.csv</strong></td>
+          
+            <td class="match">266682</td>
+          
+            <td class="match">266682</td>
+          
+            <td class="match">266682</td>
+          
+            <td class="match">266682</td>
+          
+            <td class="match">266682</td>
+          
+            <td class="match">266682</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>cal-1800721-0010-037.csv</strong></td>
+          
+            <td class="match">37</td>
+          
+            <td class="match">37</td>
+          
+            <td class="match">37</td>
+          
+            <td class="match">37</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">37<span class='timeout-text'>(8 timeouts)</span></td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>car_16bins.csv</strong></td>
+          
+            <td class="match">249147</td>
+          
+            <td class="match">249147</td>
+          
+            <td class="match">249147</td>
+          
+            <td class="match">249147</td>
+          
+            <td class="match">249147</td>
+          
+            <td class="match">249147</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>car_16bins.inc.csv</strong></td>
+          
+            <td class="match">23435775</td>
+          
+            <td class="warning">15504453 vs 30751527 vs 14065028 vs 18158345 vs 15878960<span class='timeout-text'>(5 timeouts)</span></td>
+          
+            <td class="match">23435775</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">23435775</td>
+          
+            <td class="match">23435775</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>comp2.csv</strong></td>
+          
+            <td class="match">133664796</td>
+          
+            <td class="match">133664796</td>
+          
+            <td class="match">133664796</td>
+          
+            <td class="match">133664796</td>
+          
+            <td class="match">133664796</td>
+          
+            <td class="match">133664796</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>cowInc0004L4_L2.inc.csv</strong></td>
+          
+            <td class="match">395889859</td>
+          
+            <td class="match">395889859</td>
+          
+            <td class="match">395889859</td>
+          
+            <td class="match">395889859</td>
+          
+            <td class="match">395889859</td>
+          
+            <td class="match">395889859</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>cowInc0005L4_L3.inc.csv</strong></td>
+          
+            <td class="match">394294572</td>
+          
+            <td class="match">394294572</td>
+          
+            <td class="match">394294572</td>
+          
+            <td class="match">394294572</td>
+          
+            <td class="match">394294572</td>
+          
+            <td class="match">394294572</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>crab.csv</strong></td>
+          
+            <td class="match">615073953</td>
+          
+            <td class="match">615073953</td>
+          
+            <td class="match">615073953</td>
+          
+            <td class="match">615073953</td>
+          
+            <td class="match">615073953</td>
+          
+            <td class="match">615073953</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>flamingo2.csv</strong></td>
+          
+            <td class="match">239292496</td>
+          
+            <td class="match">239292496</td>
+          
+            <td class="match">239292496</td>
+          
+            <td class="match">239292496</td>
+          
+            <td class="match">239292496</td>
+          
+            <td class="match">239292496</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>gardenInc0001L4_L3.inc.csv</strong></td>
+          
+            <td class="match">15045341</td>
+          
+            <td class="warning">15051545 vs 15050813 vs 15050735 vs 15050765 vs 15050843</td>
+          
+            <td class="match">15045341</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">15045341</td>
+          
+            <td class="match">15045341</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>gardenInc0004L4_L0.inc.csv</strong></td>
+          
+            <td class="match">15138582</td>
+          
+            <td class="warning">15141762 vs 15140982</td>
+          
+            <td class="match">15138582</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">15138582</td>
+          
+            <td class="match">15138582</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>gardenInc0004L4_L2.inc.csv</strong></td>
+          
+            <td class="match">15138462</td>
+          
+            <td class="warning">15140044 vs 15139242</td>
+          
+            <td class="match">15138462</td>
+          
+            <td class="match">15138462</td>
+          
+            <td class="match">15138462</td>
+          
+            <td class="match">15138462</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>KZ2-venus18.csv</strong></td>
+          
+            <td class="match">1099583</td>
+          
+            <td class="match">1099583</td>
+          
+            <td class="match">1099583</td>
+          
+            <td class="match">1099583</td>
+          
+            <td class="match">1099583</td>
+          
+            <td class="match">1099583</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>KZ2-venus2.csv</strong></td>
+          
+            <td class="match">1250964</td>
+          
+            <td class="match">1250964</td>
+          
+            <td class="match">1250964</td>
+          
+            <td class="match">1250964</td>
+          
+            <td class="match">1250964</td>
+          
+            <td class="match">1250964</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lazybrush-bird.max.csv</strong></td>
+          
+            <td class="match">980970</td>
+          
+            <td class="match">980970</td>
+          
+            <td class="match">980970</td>
+          
+            <td class="match">980970</td>
+          
+            <td class="match">980970</td>
+          
+            <td class="match">980970</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lazybrush-doctor.max.csv</strong></td>
+          
+            <td class="match">368364</td>
+          
+            <td class="match">368364</td>
+          
+            <td class="match">368364</td>
+          
+            <td class="match">368364</td>
+          
+            <td class="match">368364</td>
+          
+            <td class="match">368364</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lazybrush-footman.max.csv</strong></td>
+          
+            <td class="match">1086484</td>
+          
+            <td class="match">1086484</td>
+          
+            <td class="match">1086484</td>
+          
+            <td class="match">1086484</td>
+          
+            <td class="match">1086484</td>
+          
+            <td class="match">1086484</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lazybrush-hmdman.max.csv</strong></td>
+          
+            <td class="match">1417835</td>
+          
+            <td class="match">1417835</td>
+          
+            <td class="match">1417835</td>
+          
+            <td class="match">1417835</td>
+          
+            <td class="match">1417835</td>
+          
+            <td class="match">1417835</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lazybrush-mangadinner.max.csv</strong></td>
+          
+            <td class="match">742897</td>
+          
+            <td class="match">742897</td>
+          
+            <td class="match">742897</td>
+          
+            <td class="match">742897</td>
+          
+            <td class="match">742897</td>
+          
+            <td class="match">742897</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>LB07-bunny-med.max.csv</strong></td>
+          
+            <td class="match">3860022</td>
+          
+            <td class="match">3860022</td>
+          
+            <td class="match">3860022</td>
+          
+            <td class="match">3860022</td>
+          
+            <td class="match">3860022</td>
+          
+            <td class="match">3860022</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>LB07-bunny-sml.max.csv</strong></td>
+          
+            <td class="match">961163</td>
+          
+            <td class="match">961163</td>
+          
+            <td class="match">961163</td>
+          
+            <td class="match">961163</td>
+          
+            <td class="match">961163</td>
+          
+            <td class="match">961163</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>liver.n26c10.max.csv</strong></td>
+          
+            <td class="match">56739</td>
+          
+            <td class="match">56739</td>
+          
+            <td class="match">56739</td>
+          
+            <td class="match">56739</td>
+          
+            <td class="match">56739</td>
+          
+            <td class="match">56739</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>lux-112498-0010-010.csv</strong></td>
+          
+            <td class="match">10</td>
+          
+            <td class="match">10</td>
+          
+            <td class="match">10</td>
+          
+            <td class="match">10</td>
+          
+            <td class="match">10</td>
+          
+            <td class="match">10</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>nj2010-165230-0018-143.csv</strong></td>
+          
+            <td class="match">143</td>
+          
+            <td class="match">143</td>
+          
+            <td class="match">143</td>
+          
+            <td class="match">143</td>
+          
+            <td class="match">143</td>
+          
+            <td class="match">143</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>nl-2159462-0276-041.csv</strong></td>
+          
+            <td class="match">41</td>
+          
+            <td class="match">41</td>
+          
+            <td class="match">41</td>
+          
+            <td class="match">41</td>
+          
+            <td class="match">41</td>
+          
+            <td class="match">41</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>pedestrians.inc.csv</strong></td>
+          
+            <td class="match">158448834714</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">158448834714</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">158448834714</td>
+          
+            <td class="match">158448834714</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>person_64bins.csv</strong></td>
+          
+            <td class="match">170512</td>
+          
+            <td class="match">170512</td>
+          
+            <td class="match">170512</td>
+          
+            <td class="match">170512</td>
+          
+            <td class="match">170512</td>
+          
+            <td class="match">170512</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>punch-eu22-06-p.csv</strong></td>
+          
+            <td class="match">3143896</td>
+          
+            <td class="match">3143896</td>
+          
+            <td class="match">3143896</td>
+          
+            <td class="match">3143896</td>
+          
+            <td class="match">3143896</td>
+          
+            <td class="match">3143896</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>punch-us18-01-u.csv</strong></td>
+          
+            <td class="match">53</td>
+          
+            <td class="match">53</td>
+          
+            <td class="match">53</td>
+          
+            <td class="match">53</td>
+          
+            <td class="match">53</td>
+          
+            <td class="match">53</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>punch-us18-08-p.csv</strong></td>
+          
+            <td class="match">800884</td>
+          
+            <td class="match">800884</td>
+          
+            <td class="match">800884</td>
+          
+            <td class="match">800884</td>
+          
+            <td class="match">800884</td>
+          
+            <td class="match">800884</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>punch-us20-03-p.csv</strong></td>
+          
+            <td class="match">340306</td>
+          
+            <td class="match">340306</td>
+          
+            <td class="match">340306</td>
+          
+            <td class="match">340306</td>
+          
+            <td class="match">340306</td>
+          
+            <td class="match">340306</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>punch-us22-09-u.csv</strong></td>
+          
+            <td class="match">107</td>
+          
+            <td class="match">107</td>
+          
+            <td class="match">107</td>
+          
+            <td class="match">107</td>
+          
+            <td class="match">107<span class='timeout-text'>(1 timeouts)</span></td>
+          
+            <td class="match">107</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>rmf-long.n4.3142.shuf.csv</strong></td>
+          
+            <td class="match">2414963</td>
+          
+            <td class="match">2414963</td>
+          
+            <td class="match">2414963</td>
+          
+            <td class="match">2414963</td>
+          
+            <td class="match">2414963</td>
+          
+            <td class="match">2414963</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>rmf-wide.n2.3141.shuf.csv</strong></td>
+          
+            <td class="match">20210626</td>
+          
+            <td class="match">20210626</td>
+          
+            <td class="match">20210626</td>
+          
+            <td class="match">20210626</td>
+          
+            <td class="match">20210626</td>
+          
+            <td class="match">20210626</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>rmf-wide.n3.3141.shuf.csv</strong></td>
+          
+            <td class="match">35760855</td>
+          
+            <td class="match">35760855</td>
+          
+            <td class="match">35760855</td>
+          
+            <td class="match">35760855</td>
+          
+            <td class="match">35760855</td>
+          
+            <td class="match">35760855</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>videoSegA2.inc.csv</strong></td>
+          
+            <td class="match">2121629360</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">2121629360</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">2121629360</td>
+          
+            <td class="match">2121629360</td>
+          
+        </tr>
+      
+        <tr>
+          <td><strong>videoSegB.inc.csv</strong></td>
+          
+            <td class="match">2112367274</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">2112367274</td>
+          
+            <td class="timeout-cell">Timed out (10/10)</td>
+          
+            <td class="match">2112367274</td>
+          
+            <td class="match">2112367274</td>
+          
+        </tr>
+      
+    </tbody>
+  </table>
+</body>
+</html>

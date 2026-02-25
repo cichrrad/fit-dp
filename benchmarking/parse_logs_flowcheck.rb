@@ -153,7 +153,7 @@ ERB
 renderer = ERB.new(html_template)
 html_output = renderer.result(binding)
 # YUCKY AF
-output_filename = "benchmark_report_#{(ARGV[0].split('/')[1])[0..-5]}.html"
+output_filename = "benchmark_flows_#{(ARGV[0].split('/')[1])[0..-5]}.html"
 File.write(output_filename, html_output)
 
 puts "Successfully parsed log and generated HTML report: #{output_filename}"

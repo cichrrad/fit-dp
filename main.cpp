@@ -12,8 +12,6 @@
 #include "src/preprocessing/dimacs_par_loader.hpp"
 #include "src/global_relabel.hpp"
 
-// #define DEBUG_PRINT_ON_HOST
-
 // #define DEBUG_VERIFY
 
 #ifdef DEBUG_VERIFY
@@ -69,94 +67,13 @@ int main(int argc, char *argv[])
         double time_init = timer.seconds();
         std::cout << ">> Graph Build & Init Time: " << time_init << " seconds.\n";
 
-#ifdef DEBUG_PRINT_ON_HOST
-        // HOST MIRRORS=================================================
-        auto h_excess = Kokkos::create_mirror_view(g.excess);
-        auto h_added_excess = Kokkos::create_mirror_view(g.added_excess);
-        auto h_label = Kokkos::create_mirror_view(g.label);
-        auto h_new_label = Kokkos::create_mirror_view(g.new_label);
-        auto h_row_map = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.row_map);
-        auto h_entries = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.entries);
-        auto h_residual = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.residual_capacity);
-        // =============================================================
-
-        // [DEBUG] Print Graph Structure
-        std::cout << "\n=== [GRAPH ADJACENCY CHECK] ===\n";
-        for (int u = 0; u < N; ++u)
-        {
-            std::cout << "Node " << u << " Neighbors: ";
-            for (int i = h_row_map(u); i < h_row_map(u + 1); ++i)
-            {
-                int v = h_entries(i);
-                std::cout << v << " (Res " << h_residual(i) << ") ";
-            }
-            std::cout << "\n";
-        }
-
-        auto print_state = [&](const char *phase_name, size_t q_size, bool show_pending = false, long long &t_excess)
-        {
-            std::cout << "\n=== [" << phase_name << "] ===\n";
-            Kokkos::deep_copy(h_excess, g.excess);
-            Kokkos::deep_copy(h_label, g.label);
-
-            // Create a temporary snapshot of the CURRENT active queue
-            // This ensures we don't accidentally overwrite the 'next' buffer if they alias in HostSpace
-            // (such as OPENMP)
-            auto h_active_snapshot = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), g.current_active);
-
-            if (show_pending)
-            {
-                Kokkos::deep_copy(h_added_excess, g.added_excess);
-                Kokkos::deep_copy(h_new_label, g.new_label);
-            }
-
-            std::cout << "Active Queue (" << q_size << "): [ ";
-            for (size_t i = 0; i < q_size; ++i)
-                std::cout << h_active_snapshot(i) << " ";
-            std::cout << "]\n";
-
-            std::cout << " Node | Label | Excess ";
-            if (show_pending)
-                std::cout << "| +Buf | NewL ";
-            std::cout << "\n------+-------+--------";
-            if (show_pending)
-                std::cout << "+------+------";
-            std::cout << "\n";
-
-            for (int i = 0; i < N; ++i)
-            {
-                std::cout << std::setw(5) << i << " | "
-                          << std::setw(5) << h_label(i) << " | "
-                          << std::setw(6) << h_excess(i) << " ";
-                if (show_pending)
-                {
-                    std::cout << "| " << std::setw(4) << h_added_excess(i) << " | "
-                              << std::setw(4) << h_new_label(i) << " ";
-                }
-                if (i == s)
-                    std::cout << "(S)";
-                if (i == t)
-                {
-                    std::cout << "(T)";
-                    t_excess = h_excess(i) + h_added_excess(i);
-                }
-                std::cout << "\n";
-            }
-        };
-
-        long long final_excess = 0LL;
-#endif
         // [HOST] Variables
         int iteration = 1;
         size_t h_current_q_size = 0;
         const long long gr_trigger = 12 * N + 2 * g.num_edges();
         long long work_since_last_gr = 0;
+        long long iterations_since_last_gr = 0;
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
-#ifdef DEBUG_PRINT_ON_HOST
-        std::cout << "GLOBAL RELABEL TRIGGER = " << gr_trigger << "\n";
-        std::cout << "\n[STARTING ALGORITHM] Initial Active Nodes: " << h_current_q_size << "\n";
-        print_state("INITIAL STATE", h_current_q_size, false, final_excess);
-#endif
 
         // [TIMER] Start Algorithm
         timer.reset();
@@ -164,18 +81,12 @@ int main(int argc, char *argv[])
         while (h_current_q_size > 0)
         {
 
-#ifdef DEBUG_PRINT_ON_HOST
-            std::cout << "\n--- Iteration " << iteration << " ---\n";
-#endif
 
-            if (work_since_last_gr > gr_trigger)
+            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > 50 )
             {
                 work_since_last_gr = 0;
-#ifdef DEBUG_PRINT_ON_HOST
-                std::cout << "GR TRIGGERED\n";
-#endif
                 global_relabel(g, t, N);
-
+                iterations_since_last_gr = 0;
                 // reset size
                 Kokkos::deep_copy(g.current_queue_size, 0);
 
@@ -378,16 +289,13 @@ int main(int argc, char *argv[])
             Kokkos::fence("after_process_fence");
             // update work metric
             work_since_last_gr += step_work;
+            iterations_since_last_gr++;
             // PROCESS END ==============================================
 
             // Check Next Queue
             size_t h_next_q_size = 0;
             Kokkos::deep_copy(h_next_q_size, g.next_queue_size);
 
-#ifdef DEBUG_PRINT_ON_HOST
-            print_state("POST-PROCESS (Pending Updates)", h_current_q_size, true, final_excess);
-            std::cout << "Next Queue Size will be: " << h_next_q_size << "\n";
-#endif
             // APPLY =================================================
             if (h_next_q_size > 0)
             {
@@ -427,10 +335,6 @@ int main(int argc, char *argv[])
             // must be big -- maybe there is a way to do this just on device?
             Kokkos::deep_copy(g.next_queue_size, 0);
 
-#ifdef DEBUG_PRINT_ON_HOST
-            //[DEBUG] Double Check - Print the NEW current queue (which was next)
-            print_state("POST-APPLY (State Committed - Ready for Next)", h_next_q_size, false, final_excess);
-#endif
             h_current_q_size = h_next_q_size;
             iteration++;
         }
@@ -451,8 +355,6 @@ int main(int argc, char *argv[])
 
         std::cout << "MAX FLOW IS " << (h_final_excess + h_final_added) << "\n";
 #ifdef DEBUG_VERIFY
-
-        Verifier<Device>::check_excess_drained(g, s, t, N);
         Verifier<Device>::check_optimality(g, s, t, N);
 #endif
     }

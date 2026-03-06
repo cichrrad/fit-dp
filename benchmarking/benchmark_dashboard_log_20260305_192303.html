@@ -1,0 +1,4449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unified Max Flow Benchmark Dashboard</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; background-color: #f4f6f8; }
+    .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    h1, h2 { color: #2c3e50; }
+    h2 { margin-top: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 0.95em; }
+    th, td { border: 1px solid #cbd5e1; padding: 12px 15px; text-align: left; vertical-align: top; }
+    th { background-color: #f8fafc; font-weight: bold; color: #475569; position: sticky; top: 0; }
+    
+    /* Cell Styles */
+    .match { background-color: #dcfce7; color: #166534; } 
+    .match-time { background-color: #dcfce7; color: #166534; font-weight: bold; border: 2px solid #22c55e; } 
+    .warning { background-color: #fef08a; color: #854d0e; } 
+    .error { background-color: #fee2e2; color: #991b1b; } 
+    .timeout-cell { background-color: #f1f5f9; color: #64748b; font-style: italic; } 
+    
+    .timeout-text { color: #ef4444; font-size: 0.85em; font-weight: bold; }
+    .truth-match { font-weight: bold; text-decoration: underline; }
+    
+    /* Perfect Graph Highlighting */
+    .perfect-graph td { border-top: 2px solid #3b82f6; border-bottom: 2px solid #3b82f6; }
+    .perfect-graph .graph-name { background-color: #eff6ff; color: #1d4ed8; font-weight: bold; }
+    .perfect-badge { display: inline-block; background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-left: 8px; vertical-align: middle; }
+    .imperfect-graph { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Unified Benchmark Dashboard</h1>
+    <p>Graphs where all solvers perfectly matched the <strong>hpf_pseudo_fifo</strong> source of truth are highlighted with a <span class="perfect-badge">PERFECT</span> badge.</p>
+
+    <h2>1. Flow Correctness Matrix</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Graph Name</th>
+          
+            <th>hpf_pseudo_fifo (Truth)</th>
+          
+            <th>ECL_MaxFlow </th>
+          
+            <th>hipr4 </th>
+          
+            <th>pbbs_syncpar </th>
+          
+            <th>knfs_cpu </th>
+          
+            <th>knfs_gpu </th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n1024.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">51032666</td>
+            
+              <td class="match">51032666</td>
+            
+              <td class="match">51032666</td>
+            
+              <td class="match">51032666</td>
+            
+              <td class="match">51032666</td>
+            
+              <td class="match">51032666</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">102688227</td>
+            
+              <td class="match">102688227</td>
+            
+              <td class="match">102688227</td>
+            
+              <td class="match">102688227</td>
+            
+              <td class="match">102688227</td>
+            
+              <td class="match">102688227</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n4096.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">203889697</td>
+            
+              <td class="match">203889697</td>
+            
+              <td class="match">203889697</td>
+            
+              <td class="match">203889697</td>
+            
+              <td class="match">203889697</td>
+            
+              <td class="match">203889697</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              adhead.n26c100.max.csv
+              
+            </td>
+            
+              <td class="match">0</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="warning">101195836904240 vs 105925388096304 vs 109032656667440 vs 104740734305072 vs 98937055138608 vs 110934073213744 vs 95699482600240 vs 96535176966960 vs 99098774016816 vs 100041069425456</td>
+            
+              <td class="match">0</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              adhead.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">589368</td>
+            
+              <td class="match">589368</td>
+            
+              <td class="match">589368</td>
+            
+              <td class="match">589368</td>
+            
+              <td class="match">589368</td>
+            
+              <td class="match">589368</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              alue7065-33338-0006-082.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">82</td>
+            
+              <td class="match">82</td>
+            
+              <td class="match">82</td>
+            
+              <td class="match">82</td>
+            
+              <td class="match">82</td>
+            
+              <td class="match">82</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              alue7065-33338-0013-096.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">96</td>
+            
+              <td class="match">96</td>
+            
+              <td class="match">96</td>
+            
+              <td class="match">96</td>
+            
+              <td class="match">96</td>
+            
+              <td class="match">96</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              babyface.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">19448</td>
+            
+              <td class="match">19448</td>
+            
+              <td class="match">19448</td>
+            
+              <td class="match">19448</td>
+            
+              <td class="match">19448</td>
+            
+              <td class="match">19448</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-camel-med.max.csv
+              
+            </td>
+            
+              <td class="match">348774508</td>
+            
+              <td class="match">348774508</td>
+            
+              <td class="match">348774508</td>
+            
+              <td class="warning">348774246 vs 348774030 vs 348774110 vs 348774208</td>
+            
+              <td class="match">348774508</td>
+            
+              <td class="match">348774508</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-camel-sml.max.csv
+              
+            </td>
+            
+              <td class="match">76324399</td>
+            
+              <td class="match">76324399</td>
+            
+              <td class="match">76324399</td>
+            
+              <td class="warning">76324345 vs <span class='truth-match'>76324399</span> vs 76324203</td>
+            
+              <td class="match">76324399</td>
+            
+              <td class="match">76324399</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-gargoyle-med.max.csv
+              
+            </td>
+            
+              <td class="match">97979938</td>
+            
+              <td class="match">97979938</td>
+            
+              <td class="match">97979938</td>
+            
+              <td class="warning">97979915 vs 97979937 vs 97979916 vs 97979869 vs 97979674 vs 97979539 vs 97979827 vs <span class='truth-match'>97979938</span> vs 97979627</td>
+            
+              <td class="match">97979938</td>
+            
+              <td class="match">97979938</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-gargoyle-sml.max.csv
+              
+            </td>
+            
+              <td class="match">29696707</td>
+            
+              <td class="warning"><span class='truth-match'>29696707</span> vs 29696705</td>
+            
+              <td class="match">29696707</td>
+            
+              <td class="error">29696534</td>
+            
+              <td class="match">29696707</td>
+            
+              <td class="match">29696707</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">71344</td>
+            
+              <td class="match">71344</td>
+            
+              <td class="match">71344</td>
+            
+              <td class="match">71344</td>
+            
+              <td class="match">71344</td>
+            
+              <td class="match">71344</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">5454</td>
+            
+              <td class="match">5454</td>
+            
+              <td class="match">5454</td>
+            
+              <td class="match">5454</td>
+            
+              <td class="match">5454</td>
+            
+              <td class="match">5454</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subx.n26c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">0</td>
+            
+              <td class="match">0</td>
+            
+              <td class="match">0</td>
+            
+              <td class="match">0</td>
+            
+              <td class="match">0</td>
+            
+              <td class="match">0</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxy.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">16405</td>
+            
+              <td class="match">16405</td>
+            
+              <td class="match">16405</td>
+            
+              <td class="match">16405</td>
+            
+              <td class="match">16405</td>
+            
+              <td class="match">16405</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n26c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">98148</td>
+            
+              <td class="match">98148</td>
+            
+              <td class="match">98148</td>
+            
+              <td class="match">98148</td>
+            
+              <td class="match">98148</td>
+            
+              <td class="match">98148</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">90645</td>
+            
+              <td class="match">90645</td>
+            
+              <td class="match">90645</td>
+            
+              <td class="match">90645</td>
+            
+              <td class="match">90645</td>
+            
+              <td class="match">90645</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">8014</td>
+            
+              <td class="match">8014</td>
+            
+              <td class="match">8014</td>
+            
+              <td class="match">8014</td>
+            
+              <td class="match">8014</td>
+            
+              <td class="match">8014</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz_subx.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">56552</td>
+            
+              <td class="match">56552</td>
+            
+              <td class="match">56552</td>
+            
+              <td class="match">56552</td>
+            
+              <td class="match">56552</td>
+            
+              <td class="match">56552</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bug.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">101736300</td>
+            
+              <td class="match">101736300</td>
+            
+              <td class="match">101736300</td>
+            
+              <td class="match">101736300</td>
+            
+              <td class="match">101736300</td>
+            
+              <td class="match">101736300</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth0.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">265530</td>
+            
+              <td class="match">265530</td>
+            
+              <td class="match">265530</td>
+            
+              <td class="match">265530</td>
+            
+              <td class="match">265530</td>
+            
+              <td class="match">265530</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth10.csv
+              
+            </td>
+            
+              <td class="match">684428</td>
+            
+              <td class="match">684428</td>
+            
+              <td class="match">684428</td>
+            
+              <td class="error">684393</td>
+            
+              <td class="match">684428</td>
+            
+              <td class="match">684428</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth4.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">229150</td>
+            
+              <td class="match">229150</td>
+            
+              <td class="match">229150</td>
+            
+              <td class="match">229150</td>
+            
+              <td class="match">229150</td>
+            
+              <td class="match">229150</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-tsukuba14.csv
+              
+            </td>
+            
+              <td class="match">50599</td>
+            
+              <td class="match">50599</td>
+            
+              <td class="match">50599</td>
+            
+              <td class="warning">50597 vs 50598 vs 50591</td>
+            
+              <td class="match">50599</td>
+            
+              <td class="match">50599</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-tsukuba5.csv
+              
+            </td>
+            
+              <td class="match">74372</td>
+            
+              <td class="match">74372</td>
+            
+              <td class="match">74372</td>
+            
+              <td class="warning">74328 vs 74367 vs 74357</td>
+            
+              <td class="match">74372</td>
+            
+              <td class="match">74372</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-venus0.csv
+              
+            </td>
+            
+              <td class="match">360038</td>
+            
+              <td class="match">360038</td>
+            
+              <td class="match">360038</td>
+            
+              <td class="warning"><span class='truth-match'>360038</span> vs 360034</td>
+            
+              <td class="match">360038</td>
+            
+              <td class="match">360038</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-venus7.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">266682</td>
+            
+              <td class="match">266682</td>
+            
+              <td class="match">266682</td>
+            
+              <td class="match">266682</td>
+            
+              <td class="match">266682</td>
+            
+              <td class="match">266682</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-venus9.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">455136</td>
+            
+              <td class="match">455136</td>
+            
+              <td class="match">455136</td>
+            
+              <td class="match">455136</td>
+            
+              <td class="match">455136</td>
+            
+              <td class="match">455136</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cal-1800721-0008-018.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">18</td>
+            
+              <td class="match">18</td>
+            
+              <td class="match">18</td>
+            
+              <td class="match">18</td>
+            
+              <td class="match">18</td>
+            
+              <td class="match">18</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cal-1800721-0010-037.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">37</td>
+            
+              <td class="match">37</td>
+            
+              <td class="match">37</td>
+            
+              <td class="match">37</td>
+            
+              <td class="match">37</td>
+            
+              <td class="match">37</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              car_16bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">249147</td>
+            
+              <td class="match">249147</td>
+            
+              <td class="match">249147</td>
+            
+              <td class="match">249147</td>
+            
+              <td class="match">249147</td>
+            
+              <td class="match">249147</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              car_16bins.inc.csv
+              
+            </td>
+            
+              <td class="match">23435775</td>
+            
+              <td class="error">21996344<br><span class='timeout-text'>(9 timeouts)</span></td>
+            
+              <td class="match">23435775</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">23435775</td>
+            
+              <td class="match">23435775</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              car_32bins.inc.csv
+              
+            </td>
+            
+              <td class="match">23402994</td>
+            
+              <td class="warning">24470388 vs 15085458<br><span class='timeout-text'>(8 timeouts)</span></td>
+            
+              <td class="match">23402994</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">23402994</td>
+            
+              <td class="match">23402994</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              car_64bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">209507</td>
+            
+              <td class="match">209507</td>
+            
+              <td class="match">209507</td>
+            
+              <td class="match">209507</td>
+            
+              <td class="match">209507</td>
+            
+              <td class="match">209507</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              comp2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">133664796</td>
+            
+              <td class="match">133664796</td>
+            
+              <td class="match">133664796</td>
+            
+              <td class="match">133664796</td>
+            
+              <td class="match">133664796</td>
+            
+              <td class="match">133664796</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0002L4_L1.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">395373862</td>
+            
+              <td class="match">395373862</td>
+            
+              <td class="match">395373862</td>
+            
+              <td class="match">395373862</td>
+            
+              <td class="match">395373862</td>
+            
+              <td class="match">395373862</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0003L4_L0.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">396273121</td>
+            
+              <td class="match">396273121</td>
+            
+              <td class="match">396273121</td>
+            
+              <td class="match">396273121</td>
+            
+              <td class="match">396273121</td>
+            
+              <td class="match">396273121</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0004L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">395889859</td>
+            
+              <td class="match">395889859</td>
+            
+              <td class="match">395889859</td>
+            
+              <td class="match">395889859</td>
+            
+              <td class="match">395889859</td>
+            
+              <td class="match">395889859</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0005L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0005L4_L3.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+              <td class="match">394294572</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              crab.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">615073953</td>
+            
+              <td class="match">615073953</td>
+            
+              <td class="match">615073953</td>
+            
+              <td class="match">615073953</td>
+            
+              <td class="match">615073953</td>
+            
+              <td class="match">615073953</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              europe.osm.graph
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">2</td>
+            
+              <td class="match">2</td>
+            
+              <td class="match">2</td>
+            
+              <td class="match">2</td>
+            
+              <td class="match">2</td>
+            
+              <td class="match">2</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              flamingo2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">239292496</td>
+            
+              <td class="match">239292496</td>
+            
+              <td class="match">239292496</td>
+            
+              <td class="match">239292496</td>
+            
+              <td class="match">239292496</td>
+            
+              <td class="match">239292496</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0001L4_L3.inc.csv
+              
+            </td>
+            
+              <td class="match">15045341</td>
+            
+              <td class="warning">15049985 vs 15050765 vs 15050843 vs 15050033 vs 15050111 vs 15050003 vs 15051545</td>
+            
+              <td class="match">15045341</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">15045341</td>
+            
+              <td class="match">15045341</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              gardenInc0002L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">15069004</td>
+            
+              <td class="match">15069004</td>
+            
+              <td class="match">15069004</td>
+            
+              <td class="match">15069004</td>
+            
+              <td class="match">15069004</td>
+            
+              <td class="match">15069004</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0003L4_L1.inc.csv
+              
+            </td>
+            
+              <td class="match">15110932</td>
+            
+              <td class="warning">15113182 vs 15113872 vs 15113122 vs 15112372</td>
+            
+              <td class="match">15110932</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">15110932</td>
+            
+              <td class="match">15110932</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              gardenInc0003L4_L3.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">15109238</td>
+            
+              <td class="match">15109238</td>
+            
+              <td class="match">15109238</td>
+            
+              <td class="match">15109238</td>
+            
+              <td class="match">15109238</td>
+            
+              <td class="match">15109238</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0004L4_L0.inc.csv
+              
+            </td>
+            
+              <td class="match">15138582</td>
+            
+              <td class="warning">15141762 vs 15140982 vs 15140202 vs 15140952</td>
+            
+              <td class="match">15138582</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">15138582</td>
+            
+              <td class="match">15138582</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0004L4_L2.inc.csv
+              
+            </td>
+            
+              <td class="match">15138462</td>
+            
+              <td class="error">15140044</td>
+            
+              <td class="match">15138462</td>
+            
+              <td class="match">15138462</td>
+            
+              <td class="match">15138462</td>
+            
+              <td class="match">15138462</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0005L4_L0.inc.csv
+              
+            </td>
+            
+              <td class="match">15175117</td>
+            
+              <td class="warning">15176677 vs 15177427 vs 15176737</td>
+            
+              <td class="match">15175117</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">15175117</td>
+            
+              <td class="match">15175117</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0005L4_L2.inc.csv
+              
+            </td>
+            
+              <td class="match">15175039</td>
+            
+              <td class="warning">15177297 vs 15176487 vs 15176587</td>
+            
+              <td class="match">15175039</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">15175039</td>
+            
+              <td class="match">15175039</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              horse-48112-0100-120.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">120</td>
+            
+              <td class="match">120</td>
+            
+              <td class="match">120</td>
+            
+              <td class="match">120</td>
+            
+              <td class="match">120</td>
+            
+              <td class="match">120</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-sawtooth19.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">799101</td>
+            
+              <td class="match">799101</td>
+            
+              <td class="match">799101</td>
+            
+              <td class="match">799101</td>
+            
+              <td class="match">799101</td>
+            
+              <td class="match">799101</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              KZ2-sawtooth1.csv
+              
+            </td>
+            
+              <td class="match">815318</td>
+            
+              <td class="match">815318</td>
+            
+              <td class="match">815318</td>
+            
+              <td class="error">815315</td>
+            
+              <td class="match">815318</td>
+            
+              <td class="match">815318</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-venus18.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1099583</td>
+            
+              <td class="match">1099583</td>
+            
+              <td class="match">1099583</td>
+            
+              <td class="match">1099583</td>
+            
+              <td class="match">1099583</td>
+            
+              <td class="match">1099583</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-venus2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1250964</td>
+            
+              <td class="match">1250964</td>
+            
+              <td class="match">1250964</td>
+            
+              <td class="match">1250964</td>
+            
+              <td class="match">1250964</td>
+            
+              <td class="match">1250964</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              KZ2-venus6.csv
+              
+            </td>
+            
+              <td class="match">1211831</td>
+            
+              <td class="warning">1211822 vs 1211819 vs <span class='truth-match'>1211831</span> vs 1211829 vs 1211820 vs 1211826 vs 1211825</td>
+            
+              <td class="match">1211831</td>
+            
+              <td class="warning">1211554 vs 1211550 vs 1211549 vs 1211553</td>
+            
+              <td class="match">1211831</td>
+            
+              <td class="match">1211831</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-bird.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">980970</td>
+            
+              <td class="match">980970</td>
+            
+              <td class="match">980970</td>
+            
+              <td class="match">980970</td>
+            
+              <td class="match">980970</td>
+            
+              <td class="match">980970</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-doctor.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">368364</td>
+            
+              <td class="match">368364</td>
+            
+              <td class="match">368364</td>
+            
+              <td class="match">368364</td>
+            
+              <td class="match">368364</td>
+            
+              <td class="match">368364</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-elephant.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">617577</td>
+            
+              <td class="match">617577</td>
+            
+              <td class="match">617577</td>
+            
+              <td class="match">617577</td>
+            
+              <td class="match">617577</td>
+            
+              <td class="match">617577</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-footman.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1086484</td>
+            
+              <td class="match">1086484</td>
+            
+              <td class="match">1086484</td>
+            
+              <td class="match">1086484</td>
+            
+              <td class="match">1086484</td>
+            
+              <td class="match">1086484</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-hmdman.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1417835</td>
+            
+              <td class="match">1417835</td>
+            
+              <td class="match">1417835</td>
+            
+              <td class="match">1417835</td>
+            
+              <td class="match">1417835</td>
+            
+              <td class="match">1417835</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-mangadinner.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">742897</td>
+            
+              <td class="match">742897</td>
+            
+              <td class="match">742897</td>
+            
+              <td class="match">742897</td>
+            
+              <td class="match">742897</td>
+            
+              <td class="match">742897</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-mangagirl.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">437599</td>
+            
+              <td class="match">437599</td>
+            
+              <td class="match">437599</td>
+            
+              <td class="match">437599</td>
+            
+              <td class="match">437599</td>
+            
+              <td class="match">437599</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              LB07-bunny-med.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">3860022</td>
+            
+              <td class="match">3860022</td>
+            
+              <td class="match">3860022</td>
+            
+              <td class="match">3860022</td>
+            
+              <td class="match">3860022</td>
+            
+              <td class="match">3860022</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              LB07-bunny-sml.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">961163</td>
+            
+              <td class="match">961163</td>
+            
+              <td class="match">961163</td>
+            
+              <td class="match">961163</td>
+            
+              <td class="match">961163</td>
+            
+              <td class="match">961163</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              liver.n26c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">56739</td>
+            
+              <td class="match">56739</td>
+            
+              <td class="match">56739</td>
+            
+              <td class="match">56739</td>
+            
+              <td class="match">56739</td>
+            
+              <td class="match">56739</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              liver.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">625447</td>
+            
+              <td class="match">625447</td>
+            
+              <td class="match">625447</td>
+            
+              <td class="match">625447</td>
+            
+              <td class="match">625447</td>
+            
+              <td class="match">625447</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lux-108726-0033-009.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">9</td>
+            
+              <td class="match">9</td>
+            
+              <td class="match">9</td>
+            
+              <td class="match">9</td>
+            
+              <td class="match">9</td>
+            
+              <td class="match">9</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lux-112498-0010-010.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">10</td>
+            
+              <td class="match">10</td>
+            
+              <td class="match">10</td>
+            
+              <td class="match">10</td>
+            
+              <td class="match">10</td>
+            
+              <td class="match">10</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              luxembourg.osm.graph
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1</td>
+            
+              <td class="match">1</td>
+            
+              <td class="match">1</td>
+            
+              <td class="match">1</td>
+            
+              <td class="match">1</td>
+            
+              <td class="match">1</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nj2010-165230-0018-143.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">143</td>
+            
+              <td class="match">143</td>
+            
+              <td class="match">143</td>
+            
+              <td class="match">143</td>
+            
+              <td class="match">143</td>
+            
+              <td class="match">143</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nj2010-165230-0032-166.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">166</td>
+            
+              <td class="match">166</td>
+            
+              <td class="match">166</td>
+            
+              <td class="match">166</td>
+            
+              <td class="match">166</td>
+            
+              <td class="match">166</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nl-2159462-0031-021.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">21</td>
+            
+              <td class="match">21</td>
+            
+              <td class="match">21</td>
+            
+              <td class="match">21</td>
+            
+              <td class="match">21</td>
+            
+              <td class="match">21</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nl-2159462-0276-041.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">41</td>
+            
+              <td class="match">41</td>
+            
+              <td class="match">41</td>
+            
+              <td class="match">41</td>
+            
+              <td class="match">41</td>
+            
+              <td class="match">41</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              pedestrians.inc.csv
+              
+            </td>
+            
+              <td class="match">158448834714</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">158448834714</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">158448834714</td>
+            
+              <td class="match">158448834714</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              person_16bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">175378</td>
+            
+              <td class="match">175378</td>
+            
+              <td class="match">175378</td>
+            
+              <td class="match">175378</td>
+            
+              <td class="match">175378</td>
+            
+              <td class="match">175378</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              person_64bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">170512</td>
+            
+              <td class="match">170512</td>
+            
+              <td class="match">170512</td>
+            
+              <td class="match">170512</td>
+            
+              <td class="match">170512</td>
+            
+              <td class="match">170512</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu18-05-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1341717</td>
+            
+              <td class="match">1341717</td>
+            
+              <td class="match">1341717</td>
+            
+              <td class="match">1341717</td>
+            
+              <td class="match">1341717</td>
+            
+              <td class="match">1341717</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu20-08-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">102</td>
+            
+              <td class="match">102</td>
+            
+              <td class="match">102</td>
+            
+              <td class="match">102</td>
+            
+              <td class="match">102</td>
+            
+              <td class="match">102</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu20-09-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1932694</td>
+            
+              <td class="match">1932694</td>
+            
+              <td class="match">1932694</td>
+            
+              <td class="match">1932694</td>
+            
+              <td class="match">1932694</td>
+            
+              <td class="match">1932694</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu22-06-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">3143896</td>
+            
+              <td class="match">3143896</td>
+            
+              <td class="match">3143896</td>
+            
+              <td class="match">3143896</td>
+            
+              <td class="match">3143896</td>
+            
+              <td class="match">3143896</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-01-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">53</td>
+            
+              <td class="match">53</td>
+            
+              <td class="match">53</td>
+            
+              <td class="match">53</td>
+            
+              <td class="match">53</td>
+            
+              <td class="match">53</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-07-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">95</td>
+            
+              <td class="match">95</td>
+            
+              <td class="match">95</td>
+            
+              <td class="match">95</td>
+            
+              <td class="match">95</td>
+            
+              <td class="match">95</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-08-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">800884</td>
+            
+              <td class="match">800884</td>
+            
+              <td class="match">800884</td>
+            
+              <td class="match">800884</td>
+            
+              <td class="match">800884</td>
+            
+              <td class="match">800884</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-10-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">440407</td>
+            
+              <td class="match">440407</td>
+            
+              <td class="match">440407</td>
+            
+              <td class="match">440407</td>
+            
+              <td class="match">440407</td>
+            
+              <td class="match">440407</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us20-03-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">340306</td>
+            
+              <td class="match">340306</td>
+            
+              <td class="match">340306</td>
+            
+              <td class="match">340306</td>
+            
+              <td class="match">340306</td>
+            
+              <td class="match">340306</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us20-04-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">38</td>
+            
+              <td class="match">38</td>
+            
+              <td class="match">38</td>
+            
+              <td class="match">38</td>
+            
+              <td class="match">38</td>
+            
+              <td class="match">38</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-07-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">243</td>
+            
+              <td class="match">243</td>
+            
+              <td class="match">243</td>
+            
+              <td class="match">243</td>
+            
+              <td class="match">243</td>
+            
+              <td class="match">243</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-09-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">107</td>
+            
+              <td class="match">107</td>
+            
+              <td class="match">107</td>
+            
+              <td class="match">107</td>
+            
+              <td class="match">107</td>
+            
+              <td class="match">107</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-10-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">600678</td>
+            
+              <td class="match">600678</td>
+            
+              <td class="match">600678</td>
+            
+              <td class="match">600678</td>
+            
+              <td class="match">600678</td>
+            
+              <td class="match">600678</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rgg17-129426-0025-390.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">390</td>
+            
+              <td class="match">390</td>
+            
+              <td class="match">390</td>
+            
+              <td class="match">390</td>
+            
+              <td class="match">390</td>
+            
+              <td class="match">390</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rgg18-260352-0032-319.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">319</td>
+            
+              <td class="match">319</td>
+            
+              <td class="match">319</td>
+            
+              <td class="match">319</td>
+            
+              <td class="match">319</td>
+            
+              <td class="match">319</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n2.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1147661</td>
+            
+              <td class="match">1147661</td>
+            
+              <td class="match">1147661</td>
+            
+              <td class="match">1147661</td>
+            
+              <td class="match">1147661</td>
+            
+              <td class="match">1147661</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n3.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">1646580</td>
+            
+              <td class="match">1646580</td>
+            
+              <td class="match">1646580</td>
+            
+              <td class="match">1646580</td>
+            
+              <td class="match">1646580</td>
+            
+              <td class="match">1646580</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n4.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">2414963</td>
+            
+              <td class="match">2414963</td>
+            
+              <td class="match">2414963</td>
+            
+              <td class="match">2414963</td>
+            
+              <td class="match">2414963</td>
+            
+              <td class="match">2414963</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n2.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">20210626</td>
+            
+              <td class="match">20210626</td>
+            
+              <td class="match">20210626</td>
+            
+              <td class="match">20210626</td>
+            
+              <td class="match">20210626</td>
+            
+              <td class="match">20210626</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n3.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">35760855</td>
+            
+              <td class="match">35760855</td>
+            
+              <td class="match">35760855</td>
+            
+              <td class="match">35760855</td>
+            
+              <td class="match">35760855</td>
+            
+              <td class="match">35760855</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n4.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">61216193</td>
+            
+              <td class="match">61216193</td>
+            
+              <td class="match">61216193</td>
+            
+              <td class="match">61216193</td>
+            
+              <td class="match">61216193</td>
+            
+              <td class="match">61216193</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegA2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">44693164</td>
+            
+              <td class="match">44693164</td>
+            
+              <td class="match">44693164</td>
+            
+              <td class="match">44693164</td>
+            
+              <td class="match">44693164</td>
+            
+              <td class="match">44693164</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegA2.inc.csv
+              
+            </td>
+            
+              <td class="match">2121629360</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2121629360</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2121629360</td>
+            
+              <td class="match">2121629360</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegA.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">48835377</td>
+            
+              <td class="match">48835377</td>
+            
+              <td class="match">48835377</td>
+            
+              <td class="match">48835377</td>
+            
+              <td class="match">48835377</td>
+            
+              <td class="match">48835377</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegB2.inc.csv
+              
+            </td>
+            
+              <td class="match">2144157026</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2144157026</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2144157026</td>
+            
+              <td class="match">2144157026</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegB.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">7586320</td>
+            
+              <td class="match">7586320</td>
+            
+              <td class="match">7586320</td>
+            
+              <td class="match">7586320</td>
+            
+              <td class="match">7586320</td>
+            
+              <td class="match">7586320</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegB.inc.csv
+              
+            </td>
+            
+              <td class="match">2112367274</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2112367274</td>
+            
+              <td class="timeout-cell">Timed out</td>
+            
+              <td class="match">2112367274</td>
+            
+              <td class="match">2112367274</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-long.n1024.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">429514</td>
+            
+              <td class="match">429514</td>
+            
+              <td class="match">429514</td>
+            
+              <td class="match">429514</td>
+            
+              <td class="match">429514</td>
+            
+              <td class="match">429514</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-long.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">424317</td>
+            
+              <td class="match">424317</td>
+            
+              <td class="match">424317</td>
+            
+              <td class="match">424317</td>
+            
+              <td class="match">424317</td>
+            
+              <td class="match">424317</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-wide.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match">16000321</td>
+            
+              <td class="match">16000321</td>
+            
+              <td class="match">16000321</td>
+            
+              <td class="match">16000321</td>
+            
+              <td class="match">16000321</td>
+            
+              <td class="match">16000321</td>
+            
+          </tr>
+        
+      </tbody>
+    </table>
+
+    <h2>2. Performance Times (Average Seconds)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Graph Name</th>
+          
+            <th>hpf_pseudo_fifo</th>
+          
+            <th>ECL_MaxFlow</th>
+          
+            <th>hipr4</th>
+          
+            <th>pbbs_syncpar</th>
+          
+            <th>knfs_cpu</th>
+          
+            <th>knfs_gpu</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n1024.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1488 s</td>
+            
+              <td class="">0.0497 s</td>
+            
+              <td class="match-time text-bold">0.0300 s</td>
+            
+              <td class="">0.0885 s</td>
+            
+              <td class="">0.2144 s</td>
+            
+              <td class="">0.3483 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.6027 s</td>
+            
+              <td class="">0.1198 s</td>
+            
+              <td class="">0.1300 s</td>
+            
+              <td class="match-time text-bold">0.0574 s</td>
+            
+              <td class="">0.6854 s</td>
+            
+              <td class="">0.3274 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              ac.n4096.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.9307 s</td>
+            
+              <td class="">0.4540 s</td>
+            
+              <td class="">0.8720 s</td>
+            
+              <td class="match-time text-bold">0.1184 s</td>
+            
+              <td class="">3.1193 s</td>
+            
+              <td class="">1.9467 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              adhead.n26c100.max.csv
+              
+            </td>
+            
+              <td class="">33.0651 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="match-time text-bold">0.0141 s</td>
+            
+              <td class="">41.8601 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              adhead.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">53.6943 s</td>
+            
+              <td class="match-time text-bold">5.6988 s</td>
+            
+              <td class="">23.1520 s</td>
+            
+              <td class="">8.4860 s</td>
+            
+              <td class="">47.2006 s</td>
+            
+              <td class="">22.7022 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              alue7065-33338-0006-082.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0435 s</td>
+            
+              <td class="">0.3202 s</td>
+            
+              <td class="match-time text-bold">0.0200 s</td>
+            
+              <td class="">0.3033 s</td>
+            
+              <td class="">0.4445 s</td>
+            
+              <td class="">0.3919 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              alue7065-33338-0013-096.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0437 s</td>
+            
+              <td class="">0.3087 s</td>
+            
+              <td class="match-time text-bold">0.0200 s</td>
+            
+              <td class="">0.3905 s</td>
+            
+              <td class="">0.4443 s</td>
+            
+              <td class="">0.3592 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              babyface.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">24.9826 s</td>
+            
+              <td class="match-time text-bold">2.5698 s</td>
+            
+              <td class="">14.2340 s</td>
+            
+              <td class="">6.9309 s</td>
+            
+              <td class="">19.9280 s</td>
+            
+              <td class="">3.1090 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-camel-med.max.csv
+              
+            </td>
+            
+              <td class="">36.7032 s</td>
+            
+              <td class="match-time text-bold">7.5415 s</td>
+            
+              <td class="">37.0780 s</td>
+            
+              <td class="">12.5125 s</td>
+            
+              <td class="">25.3470 s</td>
+            
+              <td class="">109.1614 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-camel-sml.max.csv
+              
+            </td>
+            
+              <td class="">2.7534 s</td>
+            
+              <td class="match-time text-bold">0.8059 s</td>
+            
+              <td class="">1.4980 s</td>
+            
+              <td class="">1.2610 s</td>
+            
+              <td class="">2.4413 s</td>
+            
+              <td class="">8.0046 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-gargoyle-med.max.csv
+              
+            </td>
+            
+              <td class="">29.1163 s</td>
+            
+              <td class="match-time text-bold">5.9745 s</td>
+            
+              <td class="">24.6260 s</td>
+            
+              <td class="">15.2201 s</td>
+            
+              <td class="">23.3575 s</td>
+            
+              <td class="">25.6742 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BL06-gargoyle-sml.max.csv
+              
+            </td>
+            
+              <td class="">2.1562 s</td>
+            
+              <td class="match-time text-bold">0.7230 s</td>
+            
+              <td class="">0.9290 s</td>
+            
+              <td class="">1.4349 s</td>
+            
+              <td class="">1.9504 s</td>
+            
+              <td class="">2.6948 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">16.2475 s</td>
+            
+              <td class="match-time text-bold">3.2560 s</td>
+            
+              <td class="">5.2640 s</td>
+            
+              <td class="">4.4886 s</td>
+            
+              <td class="">24.6474 s</td>
+            
+              <td class="">7.8610 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">14.5603 s</td>
+            
+              <td class="">3.2705 s</td>
+            
+              <td class="">5.2270 s</td>
+            
+              <td class="match-time text-bold">3.1834 s</td>
+            
+              <td class="">19.8408 s</td>
+            
+              <td class="">5.6211 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subx.n26c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.4458 s</td>
+            
+              <td class="">0.1846 s</td>
+            
+              <td class="">0.1300 s</td>
+            
+              <td class="match-time text-bold">0.0645 s</td>
+            
+              <td class="">0.4655 s</td>
+            
+              <td class="">0.2288 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxy.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">3.5303 s</td>
+            
+              <td class="">0.8073 s</td>
+            
+              <td class="match-time text-bold">0.7170 s</td>
+            
+              <td class="">1.1934 s</td>
+            
+              <td class="">4.8485 s</td>
+            
+              <td class="">2.0121 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n26c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">4.9515 s</td>
+            
+              <td class="">0.9118 s</td>
+            
+              <td class="">0.9060 s</td>
+            
+              <td class="match-time text-bold">0.6970 s</td>
+            
+              <td class="">6.1176 s</td>
+            
+              <td class="">1.4657 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.7788 s</td>
+            
+              <td class="">0.4598 s</td>
+            
+              <td class="match-time text-bold">0.3000 s</td>
+            
+              <td class="">0.6401 s</td>
+            
+              <td class="">2.4271 s</td>
+            
+              <td class="">1.1420 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz.n6c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.6840 s</td>
+            
+              <td class="">0.4586 s</td>
+            
+              <td class="match-time text-bold">0.2820 s</td>
+            
+              <td class="">1.0648 s</td>
+            
+              <td class="">2.2013 s</td>
+            
+              <td class="">1.0049 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bone_subxyz_subx.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.8553 s</td>
+            
+              <td class="">0.2695 s</td>
+            
+              <td class="match-time text-bold">0.1300 s</td>
+            
+              <td class="">0.2980 s</td>
+            
+              <td class="">1.2702 s</td>
+            
+              <td class="">0.7714 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              bug.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.6014 s</td>
+            
+              <td class="">0.2549 s</td>
+            
+              <td class="match-time text-bold">0.0930 s</td>
+            
+              <td class="">0.2685 s</td>
+            
+              <td class="">0.4953 s</td>
+            
+              <td class="">0.3590 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth0.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3987 s</td>
+            
+              <td class="">0.1480 s</td>
+            
+              <td class="match-time text-bold">0.1290 s</td>
+            
+              <td class="">0.2322 s</td>
+            
+              <td class="">0.3881 s</td>
+            
+              <td class="">0.2422 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth10.csv
+              
+            </td>
+            
+              <td class="">0.4764 s</td>
+            
+              <td class="match-time text-bold">0.1590 s</td>
+            
+              <td class="">0.1940 s</td>
+            
+              <td class="">0.3472 s</td>
+            
+              <td class="">0.4312 s</td>
+            
+              <td class="">0.3779 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-sawtooth4.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.4015 s</td>
+            
+              <td class="">0.1571 s</td>
+            
+              <td class="match-time text-bold">0.1010 s</td>
+            
+              <td class="">0.2765 s</td>
+            
+              <td class="">0.3440 s</td>
+            
+              <td class="">0.3129 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-tsukuba14.csv
+              
+            </td>
+            
+              <td class="">0.2723 s</td>
+            
+              <td class="">0.1203 s</td>
+            
+              <td class="match-time text-bold">0.0800 s</td>
+            
+              <td class="">0.2541 s</td>
+            
+              <td class="">0.2757 s</td>
+            
+              <td class="">0.2081 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-tsukuba5.csv
+              
+            </td>
+            
+              <td class="">0.2075 s</td>
+            
+              <td class="">0.1755 s</td>
+            
+              <td class="match-time text-bold">0.0600 s</td>
+            
+              <td class="">0.2410 s</td>
+            
+              <td class="">0.4013 s</td>
+            
+              <td class="">0.4762 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              BVZ-venus0.csv
+              
+            </td>
+            
+              <td class="">0.5282 s</td>
+            
+              <td class="match-time text-bold">0.1512 s</td>
+            
+              <td class="">0.2370 s</td>
+            
+              <td class="">0.3645 s</td>
+            
+              <td class="">0.3938 s</td>
+            
+              <td class="">0.3304 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-venus7.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.5470 s</td>
+            
+              <td class="">0.3379 s</td>
+            
+              <td class="match-time text-bold">0.2440 s</td>
+            
+              <td class="">0.8340 s</td>
+            
+              <td class="">0.8904 s</td>
+            
+              <td class="">0.8615 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              BVZ-venus9.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.5907 s</td>
+            
+              <td class="">0.3201 s</td>
+            
+              <td class="match-time text-bold">0.2700 s</td>
+            
+              <td class="">0.8216 s</td>
+            
+              <td class="">0.7112 s</td>
+            
+              <td class="">0.6272 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cal-1800721-0008-018.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">4.6025 s</td>
+            
+              <td class="match-time text-bold">1.6391 s</td>
+            
+              <td class="">4.6140 s</td>
+            
+              <td class="">4.5436 s</td>
+            
+              <td class="">6.2286 s</td>
+            
+              <td class="">3.9061 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cal-1800721-0010-037.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">5.3156 s</td>
+            
+              <td class="match-time text-bold">3.3588 s</td>
+            
+              <td class="">4.0430 s</td>
+            
+              <td class="">5.3067 s</td>
+            
+              <td class="">14.7293 s</td>
+            
+              <td class="">8.9983 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              car_16bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.2576 s</td>
+            
+              <td class="">0.3296 s</td>
+            
+              <td class="match-time text-bold">0.0600 s</td>
+            
+              <td class="">0.3222 s</td>
+            
+              <td class="">0.3512 s</td>
+            
+              <td class="">0.6083 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              car_16bins.inc.csv
+              
+            </td>
+            
+              <td class="">0.6167 s</td>
+            
+              <td class="">1.5201 s<br><span class='timeout-text'>(9 timeouts)</span></td>
+            
+              <td class="match-time text-bold">0.1500 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.7450 s</td>
+            
+              <td class="">1.4135 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              car_32bins.inc.csv
+              
+            </td>
+            
+              <td class="">0.6120 s</td>
+            
+              <td class="">1.1966 s<br><span class='timeout-text'>(8 timeouts)</span></td>
+            
+              <td class="match-time text-bold">0.1300 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.6656 s</td>
+            
+              <td class="">1.3785 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              car_64bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.2655 s</td>
+            
+              <td class="">0.1805 s</td>
+            
+              <td class="match-time text-bold">0.0700 s</td>
+            
+              <td class="">0.2303 s</td>
+            
+              <td class="">0.3522 s</td>
+            
+              <td class="">0.5220 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              comp2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.2714 s</td>
+            
+              <td class="">0.4968 s</td>
+            
+              <td class="match-time text-bold">0.2950 s</td>
+            
+              <td class="">1.6893 s</td>
+            
+              <td class="">0.9775 s</td>
+            
+              <td class="">0.7602 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0002L4_L1.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.6194 s</td>
+            
+              <td class="">0.1573 s</td>
+            
+              <td class="">0.1730 s</td>
+            
+              <td class="match-time text-bold">0.0620 s</td>
+            
+              <td class="">0.8123 s</td>
+            
+              <td class="">3.2046 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0003L4_L0.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.0083 s</td>
+            
+              <td class="">0.2271 s</td>
+            
+              <td class="">0.1920 s</td>
+            
+              <td class="match-time text-bold">0.0696 s</td>
+            
+              <td class="">1.1467 s</td>
+            
+              <td class="">4.1618 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0004L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.9280 s</td>
+            
+              <td class="">0.2525 s</td>
+            
+              <td class="">0.1740 s</td>
+            
+              <td class="match-time text-bold">0.0476 s</td>
+            
+              <td class="">0.9779 s</td>
+            
+              <td class="">4.2156 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0005L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.9331 s</td>
+            
+              <td class="">0.2477 s</td>
+            
+              <td class="">0.1800 s</td>
+            
+              <td class="match-time text-bold">0.0757 s</td>
+            
+              <td class="">0.9836 s</td>
+            
+              <td class="">4.5988 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              cowInc0005L4_L3.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.0145 s</td>
+            
+              <td class="">0.2318 s</td>
+            
+              <td class="">0.1810 s</td>
+            
+              <td class="match-time text-bold">0.0441 s</td>
+            
+              <td class="">1.1611 s</td>
+            
+              <td class="">4.5302 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              crab.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.2134 s</td>
+            
+              <td class="">0.4722 s</td>
+            
+              <td class="match-time text-bold">0.4060 s</td>
+            
+              <td class="">1.4961 s</td>
+            
+              <td class="">1.0695 s</td>
+            
+              <td class="">0.8367 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              europe.osm.graph
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">50.5319 s</td>
+            
+              <td class="">14.3614 s</td>
+            
+              <td class="match-time text-bold">1.7420 s</td>
+            
+              <td class="">7.5429 s</td>
+            
+              <td class="">96.4112 s</td>
+            
+              <td class="">21.9275 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              flamingo2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">6.6688 s</td>
+            
+              <td class="">0.6593 s</td>
+            
+              <td class="match-time text-bold">0.5270 s</td>
+            
+              <td class="">1.0220 s</td>
+            
+              <td class="">1.7163 s</td>
+            
+              <td class="">1.2540 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0001L4_L3.inc.csv
+              
+            </td>
+            
+              <td class="">0.0319 s</td>
+            
+              <td class="match-time text-bold">0.0212 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0732 s</td>
+            
+              <td class="">0.1908 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              gardenInc0002L4_L2.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0465 s</td>
+            
+              <td class="match-time text-bold">0.0166 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0561 s</td>
+            
+              <td class="">0.0817 s</td>
+            
+              <td class="">0.2403 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0003L4_L1.inc.csv
+              
+            </td>
+            
+              <td class="">0.0414 s</td>
+            
+              <td class="match-time text-bold">0.0146 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0836 s</td>
+            
+              <td class="">0.2340 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              gardenInc0003L4_L3.inc.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0339 s</td>
+            
+              <td class="match-time text-bold">0.0193 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0596 s</td>
+            
+              <td class="">0.0693 s</td>
+            
+              <td class="">0.2138 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0004L4_L0.inc.csv
+              
+            </td>
+            
+              <td class="">0.0352 s</td>
+            
+              <td class="match-time text-bold">0.0152 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0678 s</td>
+            
+              <td class="">0.2112 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0004L4_L2.inc.csv
+              
+            </td>
+            
+              <td class="">0.0457 s</td>
+            
+              <td class="match-time text-bold">0.0172 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0351 s</td>
+            
+              <td class="">0.0834 s</td>
+            
+              <td class="">0.2203 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0005L4_L0.inc.csv
+              
+            </td>
+            
+              <td class="">0.0349 s</td>
+            
+              <td class="match-time text-bold">0.0154 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0643 s</td>
+            
+              <td class="">0.1878 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              gardenInc0005L4_L2.inc.csv
+              
+            </td>
+            
+              <td class="">0.0465 s</td>
+            
+              <td class="match-time text-bold">0.0162 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">0.0862 s</td>
+            
+              <td class="">0.2465 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              horse-48112-0100-120.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1534 s</td>
+            
+              <td class="">0.1995 s</td>
+            
+              <td class="match-time text-bold">0.0700 s</td>
+            
+              <td class="">0.7885 s</td>
+            
+              <td class="">0.3761 s</td>
+            
+              <td class="">0.2883 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-sawtooth19.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.9481 s</td>
+            
+              <td class="match-time text-bold">0.2141 s</td>
+            
+              <td class="">0.4430 s</td>
+            
+              <td class="">0.2464 s</td>
+            
+              <td class="">0.6775 s</td>
+            
+              <td class="">0.6958 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              KZ2-sawtooth1.csv
+              
+            </td>
+            
+              <td class="">0.9939 s</td>
+            
+              <td class="match-time text-bold">0.2141 s</td>
+            
+              <td class="">0.4740 s</td>
+            
+              <td class="">0.2158 s</td>
+            
+              <td class="">0.7036 s</td>
+            
+              <td class="">0.6623 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-venus18.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.1200 s</td>
+            
+              <td class="match-time text-bold">0.2427 s</td>
+            
+              <td class="">0.6190 s</td>
+            
+              <td class="">0.4300 s</td>
+            
+              <td class="">0.7592 s</td>
+            
+              <td class="">1.0040 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              KZ2-venus2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.1888 s</td>
+            
+              <td class="match-time text-bold">0.2480 s</td>
+            
+              <td class="">0.8350 s</td>
+            
+              <td class="">0.3860 s</td>
+            
+              <td class="">0.7586 s</td>
+            
+              <td class="">1.0967 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              KZ2-venus6.csv
+              
+            </td>
+            
+              <td class="">0.8454 s</td>
+            
+              <td class="match-time text-bold">0.2454 s</td>
+            
+              <td class="">0.3700 s</td>
+            
+              <td class="">0.2887 s</td>
+            
+              <td class="">0.7462 s</td>
+            
+              <td class="">1.4205 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-bird.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">18.4306 s</td>
+            
+              <td class="match-time text-bold">8.7227 s</td>
+            
+              <td class="">11.0870 s</td>
+            
+              <td class="">73.5751 s</td>
+            
+              <td class="">53.7579 s</td>
+            
+              <td class="">27.0321 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-doctor.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">4.9376 s</td>
+            
+              <td class="match-time text-bold">2.3574 s</td>
+            
+              <td class="">6.0170 s</td>
+            
+              <td class="">14.3437 s</td>
+            
+              <td class="">15.1655 s</td>
+            
+              <td class="">7.2298 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-elephant.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">21.3542 s</td>
+            
+              <td class="match-time text-bold">10.7471 s</td>
+            
+              <td class="">12.9390 s</td>
+            
+              <td class="">47.9293 s</td>
+            
+              <td class="">50.3573 s</td>
+            
+              <td class="">26.4827 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-footman.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.0701 s</td>
+            
+              <td class="">0.9083 s</td>
+            
+              <td class="match-time text-bold">0.7410 s</td>
+            
+              <td class="">2.0438 s</td>
+            
+              <td class="">2.4872 s</td>
+            
+              <td class="">1.3775 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-hmdman.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.4789 s</td>
+            
+              <td class="match-time text-bold">0.9984 s</td>
+            
+              <td class="">1.1690 s</td>
+            
+              <td class="">3.0024 s</td>
+            
+              <td class="">3.6428 s</td>
+            
+              <td class="">2.0767 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-mangadinner.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.0714 s</td>
+            
+              <td class="match-time text-bold">1.9499 s</td>
+            
+              <td class="">2.6000 s</td>
+            
+              <td class="">11.3568 s</td>
+            
+              <td class="">5.9601 s</td>
+            
+              <td class="">3.8168 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lazybrush-mangagirl.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match-time text-bold">1.4490 s</td>
+            
+              <td class="">3.4361 s</td>
+            
+              <td class="">1.8350 s</td>
+            
+              <td class="">17.0936 s</td>
+            
+              <td class="">13.6218 s</td>
+            
+              <td class="">8.6103 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              LB07-bunny-med.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">18.6756 s</td>
+            
+              <td class="match-time text-bold">3.4218 s</td>
+            
+              <td class="">22.8590 s</td>
+            
+              <td class="">5.0487 s</td>
+            
+              <td class="">15.3378 s</td>
+            
+              <td class="">8.7283 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              LB07-bunny-sml.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.7889 s</td>
+            
+              <td class="match-time text-bold">0.4429 s</td>
+            
+              <td class="">0.7700 s</td>
+            
+              <td class="">0.7402 s</td>
+            
+              <td class="">1.7200 s</td>
+            
+              <td class="">1.5273 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              liver.n26c10.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">17.1193 s</td>
+            
+              <td class="match-time text-bold">2.1205 s</td>
+            
+              <td class="">8.2020 s</td>
+            
+              <td class="">7.0245 s</td>
+            
+              <td class="">11.6034 s</td>
+            
+              <td class="">6.0525 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              liver.n6c100.max.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">19.7903 s</td>
+            
+              <td class="match-time text-bold">2.0974 s</td>
+            
+              <td class="">11.2110 s</td>
+            
+              <td class="">4.7431 s</td>
+            
+              <td class="">12.9842 s</td>
+            
+              <td class="">7.6645 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lux-108726-0033-009.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="match-time text-bold">0.0949 s</td>
+            
+              <td class="">1.2204 s</td>
+            
+              <td class="">0.1310 s</td>
+            
+              <td class="">0.8495 s</td>
+            
+              <td class="">2.9581 s</td>
+            
+              <td class="">2.5710 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              lux-112498-0010-010.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1108 s</td>
+            
+              <td class="">0.7502 s</td>
+            
+              <td class="match-time text-bold">0.1100 s</td>
+            
+              <td class="">1.8512 s</td>
+            
+              <td class="">1.5683 s</td>
+            
+              <td class="">1.3353 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              luxembourg.osm.graph
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1088 s</td>
+            
+              <td class="">0.1003 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="match-time text-bold">0.0875 s</td>
+            
+              <td class="">0.3099 s</td>
+            
+              <td class="">0.2194 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nj2010-165230-0018-143.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3931 s</td>
+            
+              <td class="">0.1848 s</td>
+            
+              <td class="match-time text-bold">0.0970 s</td>
+            
+              <td class="">0.3775 s</td>
+            
+              <td class="">0.4605 s</td>
+            
+              <td class="">0.2447 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nj2010-165230-0032-166.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.4721 s</td>
+            
+              <td class="">0.2599 s</td>
+            
+              <td class="match-time text-bold">0.1990 s</td>
+            
+              <td class="">0.6204 s</td>
+            
+              <td class="">0.6503 s</td>
+            
+              <td class="">0.4088 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nl-2159462-0031-021.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">3.5369 s</td>
+            
+              <td class="match-time text-bold">2.2535 s</td>
+            
+              <td class="">4.8060 s</td>
+            
+              <td class="">7.6826 s</td>
+            
+              <td class="">26.3480 s</td>
+            
+              <td class="">18.5885 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              nl-2159462-0276-041.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.5247 s</td>
+            
+              <td class="match-time text-bold">1.4890 s</td>
+            
+              <td class="">4.7700 s</td>
+            
+              <td class="">4.1692 s</td>
+            
+              <td class="">6.9513 s</td>
+            
+              <td class="">3.9702 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              pedestrians.inc.csv
+              
+            </td>
+            
+              <td class="">6.7096 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="match-time text-bold">0.2900 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">5.1250 s</td>
+            
+              <td class="">1.8674 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              person_16bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3083 s</td>
+            
+              <td class="">0.7446 s</td>
+            
+              <td class="match-time text-bold">0.0510 s</td>
+            
+              <td class="">0.2352 s</td>
+            
+              <td class="">0.4324 s</td>
+            
+              <td class="">0.6956 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              person_64bins.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3120 s</td>
+            
+              <td class="">0.1305 s</td>
+            
+              <td class="match-time text-bold">0.0500 s</td>
+            
+              <td class="">0.1919 s</td>
+            
+              <td class="">0.4067 s</td>
+            
+              <td class="">0.5547 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu18-05-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.2294 s</td>
+            
+              <td class="">0.2828 s</td>
+            
+              <td class="match-time text-bold">0.1520 s</td>
+            
+              <td class="">1.0366 s</td>
+            
+              <td class="">0.7744 s</td>
+            
+              <td class="">0.5374 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu20-08-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.6474 s</td>
+            
+              <td class="match-time text-bold">0.5185 s</td>
+            
+              <td class="">0.5420 s</td>
+            
+              <td class="">1.3609 s</td>
+            
+              <td class="">2.0390 s</td>
+            
+              <td class="">1.2402 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu20-09-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.8969 s</td>
+            
+              <td class="">0.5389 s</td>
+            
+              <td class="match-time text-bold">0.5280 s</td>
+            
+              <td class="">1.9330 s</td>
+            
+              <td class="">2.0468 s</td>
+            
+              <td class="">1.2565 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-eu22-06-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">6.9248 s</td>
+            
+              <td class="match-time text-bold">1.6755 s</td>
+            
+              <td class="">4.6960 s</td>
+            
+              <td class="">6.5379 s</td>
+            
+              <td class="">10.8754 s</td>
+            
+              <td class="">4.7323 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-01-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0744 s</td>
+            
+              <td class="">0.1275 s</td>
+            
+              <td class="match-time text-bold">0.0100 s</td>
+            
+              <td class="">0.1922 s</td>
+            
+              <td class="">0.3186 s</td>
+            
+              <td class="">0.2119 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-07-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1817 s</td>
+            
+              <td class="">0.3997 s</td>
+            
+              <td class="match-time text-bold">0.0800 s</td>
+            
+              <td class="">0.4941 s</td>
+            
+              <td class="">1.1253 s</td>
+            
+              <td class="">0.8444 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-08-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1623 s</td>
+            
+              <td class="">0.3647 s</td>
+            
+              <td class="match-time text-bold">0.0500 s</td>
+            
+              <td class="">0.7671 s</td>
+            
+              <td class="">1.1082 s</td>
+            
+              <td class="">0.8765 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us18-10-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1111 s</td>
+            
+              <td class="">0.2563 s</td>
+            
+              <td class="match-time text-bold">0.0300 s</td>
+            
+              <td class="">0.5492 s</td>
+            
+              <td class="">0.7083 s</td>
+            
+              <td class="">0.5446 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us20-03-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.4514 s</td>
+            
+              <td class="">0.4380 s</td>
+            
+              <td class="match-time text-bold">0.1300 s</td>
+            
+              <td class="">0.9343 s</td>
+            
+              <td class="">1.3448 s</td>
+            
+              <td class="">0.8406 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us20-04-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.5534 s</td>
+            
+              <td class="">0.4469 s</td>
+            
+              <td class="match-time text-bold">0.3700 s</td>
+            
+              <td class="">1.4666 s</td>
+            
+              <td class="">1.3464 s</td>
+            
+              <td class="">0.8733 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-07-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">3.0663 s</td>
+            
+              <td class="match-time text-bold">1.3892 s</td>
+            
+              <td class="">1.7910 s</td>
+            
+              <td class="">6.4057 s</td>
+            
+              <td class="">8.0817 s</td>
+            
+              <td class="">3.6291 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-09-u.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.7164 s</td>
+            
+              <td class="match-time text-bold">1.5566 s</td>
+            
+              <td class="">2.1520 s</td>
+            
+              <td class="">9.2517 s</td>
+            
+              <td class="">11.2708 s</td>
+            
+              <td class="">5.5715 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              punch-us22-10-p.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">6.7467 s</td>
+            
+              <td class="match-time text-bold">2.0335 s</td>
+            
+              <td class="">2.0480 s</td>
+            
+              <td class="">12.0073 s</td>
+            
+              <td class="">17.7058 s</td>
+            
+              <td class="">10.7990 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rgg17-129426-0025-390.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.8449 s</td>
+            
+              <td class="">0.4830 s</td>
+            
+              <td class="match-time text-bold">0.3930 s</td>
+            
+              <td class="">1.7302 s</td>
+            
+              <td class="">1.0245 s</td>
+            
+              <td class="">0.7792 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rgg18-260352-0032-319.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">2.3446 s</td>
+            
+              <td class="match-time text-bold">0.5098 s</td>
+            
+              <td class="">1.6430 s</td>
+            
+              <td class="">1.8260 s</td>
+            
+              <td class="">1.6028 s</td>
+            
+              <td class="">0.8590 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n2.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1303 s</td>
+            
+              <td class="">0.4808 s</td>
+            
+              <td class="match-time text-bold">0.0300 s</td>
+            
+              <td class="">3.2603 s</td>
+            
+              <td class="">1.5802 s</td>
+            
+              <td class="">1.2900 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n3.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3259 s</td>
+            
+              <td class="">0.8839 s</td>
+            
+              <td class="match-time text-bold">0.0410 s</td>
+            
+              <td class="">6.2194 s</td>
+            
+              <td class="">3.5787 s</td>
+            
+              <td class="">2.7497 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-long.n4.3142.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">1.0454 s</td>
+            
+              <td class="">1.4303 s</td>
+            
+              <td class="match-time text-bold">0.0900 s</td>
+            
+              <td class="">18.2658 s</td>
+            
+              <td class="">7.0508 s</td>
+            
+              <td class="">5.2406 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n2.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.0948 s</td>
+            
+              <td class="">1.2079 s</td>
+            
+              <td class="match-time text-bold">0.0770 s</td>
+            
+              <td class="">4.1839 s</td>
+            
+              <td class="">3.5442 s</td>
+            
+              <td class="">2.3560 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n3.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.2717 s</td>
+            
+              <td class="">2.0484 s</td>
+            
+              <td class="match-time text-bold">0.1600 s</td>
+            
+              <td class="">11.3770 s</td>
+            
+              <td class="">5.9395 s</td>
+            
+              <td class="">4.4152 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              rmf-wide.n4.3141.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.6845 s</td>
+            
+              <td class="">3.8957 s</td>
+            
+              <td class="match-time text-bold">0.3390 s</td>
+            
+              <td class="">22.4857 s</td>
+            
+              <td class="">12.4234 s</td>
+            
+              <td class="">8.9177 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegA2.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.9286 s</td>
+            
+              <td class="match-time text-bold">0.2481 s</td>
+            
+              <td class="">0.6080 s</td>
+            
+              <td class="">0.6230 s</td>
+            
+              <td class="">0.8290 s</td>
+            
+              <td class="">0.8580 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegA2.inc.csv
+              
+            </td>
+            
+              <td class="">10.5887 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="match-time text-bold">1.2440 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">5.0589 s</td>
+            
+              <td class="">3.0927 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegA.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.9583 s</td>
+            
+              <td class="match-time text-bold">0.2478 s</td>
+            
+              <td class="">0.5890 s</td>
+            
+              <td class="">1.1078 s</td>
+            
+              <td class="">0.7261 s</td>
+            
+              <td class="">0.9201 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegB2.inc.csv
+              
+            </td>
+            
+              <td class="">3.5350 s</td>
+            
+              <td class="">0.9463 s<br><span class='timeout-text'>(10 timeouts)</span></td>
+            
+              <td class="match-time text-bold">0.1790 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">3.3782 s</td>
+            
+              <td class="">4.6794 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              videoSegB.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.5790 s</td>
+            
+              <td class="">0.2521 s</td>
+            
+              <td class="match-time text-bold">0.0600 s</td>
+            
+              <td class="">0.1245 s</td>
+            
+              <td class="">0.6241 s</td>
+            
+              <td class="">1.1063 s</td>
+            
+          </tr>
+        
+          <tr class="imperfect-graph">
+            <td class="graph-name">
+              videoSegB.inc.csv
+              
+            </td>
+            
+              <td class="">3.5505 s</td>
+            
+              <td class="">0.9561 s<br><span class='timeout-text'>(10 timeouts)</span></td>
+            
+              <td class="match-time text-bold">0.1730 s</td>
+            
+              <td class="timeout-cell">N/A</td>
+            
+              <td class="">3.5151 s</td>
+            
+              <td class="">4.9817 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-long.n1024.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.1034 s</td>
+            
+              <td class="">0.9727 s</td>
+            
+              <td class="match-time text-bold">0.0340 s</td>
+            
+              <td class="">2.5612 s</td>
+            
+              <td class="">3.5823 s</td>
+            
+              <td class="">3.1712 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-long.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.2740 s</td>
+            
+              <td class="">2.1934 s</td>
+            
+              <td class="match-time text-bold">0.0600 s</td>
+            
+              <td class="">8.7273 s</td>
+            
+              <td class="">9.2749 s</td>
+            
+              <td class="">8.4917 s</td>
+            
+          </tr>
+        
+          <tr class="perfect-graph">
+            <td class="graph-name">
+              wash-rlg-wide.n2048.1163.shuf.csv
+              <span class='perfect-badge'>PERFECT</span>
+            </td>
+            
+              <td class="">0.3799 s</td>
+            
+              <td class="match-time text-bold">0.1955 s</td>
+            
+              <td class="">0.2200 s</td>
+            
+              <td class="">1.4767 s</td>
+            
+              <td class="">0.8220 s</td>
+            
+              <td class="">0.5056 s</td>
+            
+          </tr>
+        
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

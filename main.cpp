@@ -82,10 +82,10 @@ int main(int argc, char *argv[])
         {
 
 
-            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > 50 )
+            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > 1000 )
             {
                 work_since_last_gr = 0;
-                global_relabel(g, t, N);
+                global_relabel(g, s, t, N);
                 iterations_since_last_gr = 0;
                 // reset size
                 Kokkos::deep_copy(g.current_queue_size, 0);
@@ -110,8 +110,13 @@ int main(int argc, char *argv[])
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),
                 KOKKOS_LAMBDA(const int &i, long long &l_work) {
                     int u = g.current_active(i);
-                    long long e_u = g.excess(u);
+                    
+                    if (u == s){
+                        return;
+                    }
 
+                    long long e_u = g.excess(u);
+                    
                     // label at the moment kernel was
                     // launched (this wont change)
                     const int d_u_start = g.label(u);
@@ -135,8 +140,8 @@ int main(int argc, char *argv[])
                         l_work += (row_end - row_start);
 
                         // "Infinity"
-                        // (> N should do)
-                        int min_d_neighbor = N+1;
+                        // (> 2N - 1 should do)
+                        unsigned long min_d_neighbor = 2*N;
                         bool skipped_admissible_edge = false;
 
                         // go over all the edges from u and try
@@ -251,7 +256,7 @@ int main(int argc, char *argv[])
                         int new_d = min_d_neighbor + 1;
 
                         // Apply relabel if valid and increasing
-                        if (new_d < N+1 && new_d > d_u_start)
+                        if (new_d < 2*N && new_d > d_u_start)
                         {
                             d_u_current = new_d;
                             // Buffer update

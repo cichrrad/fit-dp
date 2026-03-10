@@ -70,10 +70,8 @@ int main(int argc, char *argv[])
         // [HOST] Variables
         int iteration = 1;
         size_t h_current_q_size = 0;
-        const long long gr_trigger = 12 * N + 2 * g.num_edges();
-        const long long gr_iter_trigger = std::max(1000, (N * N) / (1000 * g.num_edges()));
-        std::cout << "GR ITERATION TRIGGER IS " << gr_iter_trigger << "\n";
-        long long work_since_last_gr = 0;
+        const long long gr_iter_trigger = 1000;
+        
         long long iterations_since_last_gr = 0;
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
 
@@ -83,9 +81,8 @@ int main(int argc, char *argv[])
         while (h_current_q_size > 0)
         {
 
-            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > gr_iter_trigger)
+            if (iterations_since_last_gr > gr_iter_trigger)
             {
-                work_since_last_gr = 0;
                 global_relabel(g, s, t, N);
                 iterations_since_last_gr = 0;
                 // reset size
@@ -102,16 +99,14 @@ int main(int argc, char *argv[])
 
                 Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
             }
-            long long step_work = 0;
             int next_iter_mask = iteration + 1;
 
             // PROCESS =================================================
-            Kokkos::parallel_reduce(
+            Kokkos::parallel_for(
                 "process_kernel",
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),
-                KOKKOS_LAMBDA(const int &i, long long &l_work) {
+                KOKKOS_LAMBDA(const int &i) {
                     int u = g.current_active(i);
-
                     if (u == s || u == t)
                     {
                         return;
@@ -139,7 +134,6 @@ int main(int argc, char *argv[])
                         // se add this every time
                         // we re-enter it, because
                         // we rescan edges
-                        l_work += (row_end - row_start);
 
                         // "Infinity"
                         // (N should do)
@@ -261,13 +255,7 @@ int main(int argc, char *argv[])
                         if (new_d < N + 1 && new_d > d_u_start)
                         {
                             d_u_current = new_d;
-                            // Buffer update
                             g.new_label(u) = new_d;
-                            // add Beta -- relabel tax
-                            // to support global relabel
-                            // sooner if we are in this
-                            // situation
-                            l_work += 12;
                         }
                         else
                         {
@@ -289,13 +277,11 @@ int main(int argc, char *argv[])
                             g.next_active(insert_pos) = u;
                         }
                     }
-                },
-                step_work);
+                });
 
             // wait for all threads
             Kokkos::fence("after_process_fence");
             // update work metric
-            work_since_last_gr += step_work;
             iterations_since_last_gr++;
             // PROCESS END ==============================================
 

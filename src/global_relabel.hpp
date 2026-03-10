@@ -26,11 +26,11 @@ void global_relabel(Graph<DeviceType> &g, int s, int t, int n)
             g.current_queue_size() = 1;
         }
         else if(v == s){
-            g.label(v) = n;
-        } 
+            g.label(v) = n; 
+        }
         else {
             // This is a normal node
-            g.label(v) = 2*n; 
+            g.label(v) = n+1; 
         } });
 
     // Fence to ensure the queue is ready before the Host reads size in the loop
@@ -61,12 +61,13 @@ void global_relabel(Graph<DeviceType> &g, int s, int t, int n)
                 {
                     continue;
                 }
+
                 int rev_idx = g.reverse_edge(i);
 
                 if (g.residual_capacity(rev_idx) > 0)
                 {
 
-                    int expected_label = 2 * n;
+                    int expected_label = n+1;
                     int new_label_val = dist + 1;
 
                     // TODO: -- try to redo so that atomic contention is not an issue

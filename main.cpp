@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
         int iteration = 1;
         size_t h_current_q_size = 0;
         const long long gr_trigger = 12 * N + 2 * g.num_edges();
+        const long long gr_iter_trigger = std::max(1000, (N * N) / (1000 * g.num_edges()));
+        std::cout << "GR ITERATION TRIGGER IS " << gr_iter_trigger << "\n";
         long long work_since_last_gr = 0;
         long long iterations_since_last_gr = 0;
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
@@ -81,8 +83,7 @@ int main(int argc, char *argv[])
         while (h_current_q_size > 0)
         {
 
-
-            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > 1000 )
+            if (work_since_last_gr > gr_trigger || iterations_since_last_gr > gr_iter_trigger)
             {
                 work_since_last_gr = 0;
                 global_relabel(g, s, t, N);
@@ -110,13 +111,14 @@ int main(int argc, char *argv[])
                 Kokkos::RangePolicy<Device>(0, h_current_q_size),
                 KOKKOS_LAMBDA(const int &i, long long &l_work) {
                     int u = g.current_active(i);
-                    
-                    if (u == s){
+
+                    if (u == s || u == t)
+                    {
                         return;
                     }
 
                     long long e_u = g.excess(u);
-                    
+
                     // label at the moment kernel was
                     // launched (this wont change)
                     const int d_u_start = g.label(u);
@@ -140,8 +142,8 @@ int main(int argc, char *argv[])
                         l_work += (row_end - row_start);
 
                         // "Infinity"
-                        // (> 2N - 1 should do)
-                        unsigned long min_d_neighbor = 2*N;
+                        // (N should do)
+                        unsigned long min_d_neighbor = N + 1;
                         bool skipped_admissible_edge = false;
 
                         // go over all the edges from u and try
@@ -256,7 +258,7 @@ int main(int argc, char *argv[])
                         int new_d = min_d_neighbor + 1;
 
                         // Apply relabel if valid and increasing
-                        if (new_d < 2*N && new_d > d_u_start)
+                        if (new_d < N + 1 && new_d > d_u_start)
                         {
                             d_u_current = new_d;
                             // Buffer update

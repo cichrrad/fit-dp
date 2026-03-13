@@ -127,6 +127,9 @@ struct Graph
     // for global relabel -- this saves memory
     // AND reset overhead we would need
 
+    // Tracks the iteration a node was processed in
+    Kokkos::View<int *, DeviceType> active_phase;
+
     // -------------------------------------------------------
     // Helpers
     // -------------------------------------------------------

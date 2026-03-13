@@ -92,6 +92,7 @@ public:
         g.next_queue_size = Kokkos::View<size_t, DeviceType>("next_q_size");
         g.current_active = typename Graph<DeviceType>::EntriesType("curr_active", num_nodes);
         g.next_active = typename Graph<DeviceType>::EntriesType("next_active", num_nodes);
+        g.active_phase = typename Graph<DeviceType>::MaskViewType("active_phase", num_nodes);
 
         IntView compressed_u(Kokkos::ViewAllocateWithoutInitializing("compressed_u"), total_edges);
         Kokkos::deep_copy(g.residual_capacity, 0);
@@ -165,6 +166,8 @@ public:
         Kokkos::deep_copy(g.active_iteration_mask, 0);
         Kokkos::deep_copy(g.current_queue_size, 0);
         Kokkos::deep_copy(g.next_queue_size, 0);
+        
+        Kokkos::deep_copy(g.active_phase, 0);
 
         return g;
     }

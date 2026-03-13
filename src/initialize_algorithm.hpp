@@ -57,6 +57,7 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
 
                     // Mark as active in iteration mask for start of algo
                     g.active_iteration_mask(v) = 1;
+                    g.active_phase(v) = 1;
                 }
 
                 // Accumulate total flow pushed for the reduction

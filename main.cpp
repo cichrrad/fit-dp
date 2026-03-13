@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
         // [HOST] Variables
         int iteration = 1;
         size_t h_current_q_size = 0;
-        const long long gr_iter_trigger = 1000;
-        
+        const long long gr_iter_trigger = 1500;
+
         long long iterations_since_last_gr = 0;
         Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
 
@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
                 Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
             }
             int next_iter_mask = iteration + 1;
+
 
             // PROCESS =================================================
             Kokkos::parallel_for(
@@ -161,14 +162,16 @@ int main(int argc, char *argv[])
                                 // admissible ?
                                 if (d_u_current == d_v + 1)
                                 {
-                                    // win condition
-                                    // note that this is calculated
-                                    // with const label from kernel launch
-                                    // moment, not current (possibly relabeled)
-                                    // label d_u_current
-                                    bool wins = (d_u_start < d_v - 1) ||
-                                                (d_u_start == d_v + 1) ||
-                                                (d_u_start == d_v && u < v);
+                                    bool wins = true;
+
+                                    if (g.active_phase(v) == iteration)
+                                    {
+                                        // Conflict detected! Fall back to the deterministic tie-breaker
+                                        // using the labels from the start of the iteration.
+                                        wins = (d_u_start < d_v - 1) ||
+                                               (d_u_start == d_v + 1) ||
+                                               (d_u_start == d_v && u < v);
+                                    }
 
                                     if (wins)
                                     {
@@ -298,6 +301,7 @@ int main(int argc, char *argv[])
                     KOKKOS_LAMBDA(const int &i) {
                         int u = g.next_active(i);
                         long long incoming = g.added_excess(u);
+                        g.active_phase(u) = next_iter_mask;
                         // update excess added by process
                         // kernel prior, so that excess
                         // is up-to-date for next iter

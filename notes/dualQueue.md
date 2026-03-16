@@ -70,6 +70,7 @@ Main change is splitting active queue into 2 queues -- low and high queues + add
 // 1. Define the Team Policy
 // Leagues = number of high-degree nodes in the queue.
 // Team Size = Hardware warp/wavefront size (e.g., 32).
+// --> instead of hardcoding, we should query it 
 Kokkos::TeamPolicy<Device> policy_high(h_current_q_size_high, 32);
 
 Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Device>::member_type& team) {
@@ -115,10 +116,14 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                 if (cap > 0) {
                     d_v = g.label(v);
                     if (d_u_current == d_v + 1) {
-                        wins = (d_u_start < d_v - 1) || 
-                               (d_u_start == d_v + 1) || 
-                               (d_u_start == d_v && u < v);
                         admissible = true;
+                        wins = true;
+                        
+                        if (g.active_phase(v) == iteration) {
+                            wins =  (d_u_start < d_v - 1) || 
+                                    (d_u_start == d_v + 1) || 
+                                    (d_u_start == d_v && u < v);
+                        }
                     }
                 }
             }
@@ -398,3 +403,56 @@ Kokkos::parallel_for("process_low_kernel", policy_low, KOKKOS_LAMBDA(const int& 
     }
 });
 ```
+
+## DRAFT -- APPLY KERNEL
+
+In apply kernel, we need to do the same thing regardless of the type of node, BUT we must fetch correct queue 
+
+```cpp
+size_t total_next_q = h_next_q_size_low + h_next_q_size_high;
+
+if (total_next_q > 0)
+{
+    Kokkos::parallel_for(
+        "apply_kernel",
+        Kokkos::RangePolicy<Device>(0, total_next_q),
+        KOKKOS_LAMBDA(const int &i) {
+            // fetch from the correct queue based on the global index
+            int u;
+            if (i < h_next_q_size_low) {
+                u = g.next_active_low(i);
+            } else {
+                u = g.next_active_high(i - h_next_q_size_low);
+            }
+
+            // same logic
+            long long incoming = g.added_excess(u);
+            
+            if (incoming > 0 || g.excess(u))
+            {
+                g.excess(u) += incoming;
+                g.added_excess(u) = 0;
+                g.active_phase(u) = next_iter_mask;
+            }
+            
+            int d_proposed = g.new_label(u);
+            int d_current = g.label(u);
+            
+            if (d_proposed > d_current)
+            {
+                g.label(u) = d_proposed;
+                g.new_label(u) = 0;
+            }
+        });
+
+    Kokkos::fence("after_apply_fence");
+}
+```
+
+## DRAFT -- GR
+
+we must add view for the global relabel, as the old uniform queues are no longer present (because of the dual queue design). This means GR itself stays the same. After GR, we rebuild active set like we were doing till now, but we just add to specific queue based on degree.
+
+### Other changes
+
+* adding new queues + their size vars + arc optimization view to the graph struct 

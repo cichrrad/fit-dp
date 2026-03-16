@@ -95,6 +95,7 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
     // Loop until discharged or blocked
     while (e_u > 0) {
         unsigned long local_min_d = N + 1;
+        int first_skipped_chunk = -1;
         int skipped_admissible = 0; 
 
         // 2. CHUNKING LOGIC
@@ -144,7 +145,12 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
             int thread_skipped = (valid_edge && admissible && !wins) ? 1 : 0;
             int team_skipped;
             Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), thread_skipped, team_skipped);
-            if (team_skipped > 0) skipped_admissible = 1;
+            if (team_skipped > 0){
+                skipped_admissible = 1;
+                if (first_skipped_chunk == -1) {
+                    first_skipped_chunk = chunk_start;
+                }
+            } 
 
 
             // 3. TEAM PREFIX SUM FOR PUSHING
@@ -250,7 +256,10 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
             // 5. EARLY EXIT & CURRENT ARC
             if (e_u == 0) {
                 // Thread 0 saves the chunk index to resume later
-                if (team.team_rank() == 0) g.current_arc(u) = chunk_start;
+                if (team.team_rank() == 0) {
+                    // Anchor to the first skipped chunk, or the current chunk if no skips occurred
+                    g.current_arc(u) = (first_skipped_chunk != -1) ? first_skipped_chunk : chunk_start;
+                }
                 break; // Break the chunk loop
             }
         } // End of chunk loop
@@ -282,6 +291,13 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                 g.next_active_high(pos) = u;
             }
         }
+        if (e_u > 0 && d_u_current == d_u_start) {
+            // We hit the end of the edge list, didn't relabel, but still have excess.
+            // This only happens if we skipped edges. Reset arc to the skipped chunk.
+            if (team.team_rank() == 0 && first_skipped_chunk != -1) {
+                g.current_arc(u) = first_skipped_chunk;
+            }
+        }
     }
 });
 ```
@@ -304,11 +320,13 @@ Kokkos::parallel_for("process_low_kernel", policy_low, KOKKOS_LAMBDA(const int& 
     int row_start = g.row_map(u);
     int row_end = g.row_map(u + 1);
     
+    
     // Load the saved arc (edge offset)
     int current_edge_idx = row_start + g.current_arc(u);
 
     while (e_u > 0) {
         unsigned long min_d_neighbor = N + 1;
+        int first_skipped_idx = -1;
         bool skipped_admissible_edge = false;
 
         // 2. Resume from current_edge_idx instead of row_start
@@ -321,10 +339,13 @@ Kokkos::parallel_for("process_low_kernel", policy_low, KOKKOS_LAMBDA(const int& 
                 if (d_v < min_d_neighbor) min_d_neighbor = d_v;
 
                 if (d_u_current == d_v + 1) {
-                    // Win condition to avoid locking on edges 
-                    bool wins = (d_u_start < d_v - 1) || 
+                    wins = true;
+                        
+                    if (g.active_phase(v) == iteration) {
+                        wins =  (d_u_start < d_v - 1) || 
                                 (d_u_start == d_v + 1) || 
                                 (d_u_start == d_v && u < v);
+                    }
 
                     if (wins) {
                         long long delta = (e_u < cap) ? e_u : cap;
@@ -356,13 +377,17 @@ Kokkos::parallel_for("process_low_kernel", policy_low, KOKKOS_LAMBDA(const int& 
 
                         if (e_u == 0) {
                             // 4. Save the arc!
-                            // We exhausted our excess. Save the current edge index so we don't 
-                            // rescan [row_start, idx-1] next time this vertex is activated.
-                            current_edge_idx = idx; 
+                            // If we skipped an edge earlier, anchor the arc to it.
+                            // Otherwise, anchor it to the current edge where we ran out of excess
+                            current_edge_idx = (first_skipped_idx != -1) ? first_skipped_idx : idx;
                             break;
                         }
                     } else {
                         skipped_admissible_edge = true;
+                        // Record the VERY FIRST skipped index.
+                        if (first_skipped_idx == -1) {
+                            first_skipped_idx = idx;
+                        }
                         continue; 
                     }
                 }

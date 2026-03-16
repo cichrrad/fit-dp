@@ -94,6 +94,26 @@ public:
         g.next_active = typename Graph<DeviceType>::EntriesType("next_active", num_nodes);
         g.active_phase = typename Graph<DeviceType>::MaskViewType("active_phase", num_nodes);
 
+
+        // new stuff 
+        // g.current_low_size = Kokkos::View<size_t, DeviceType>("curr_low_size");
+        // g.current_high_size = Kokkos::View<size_t, DeviceType>("curr_high_size");
+        // g.next_high_size =  Kokkos::View<size_t, DeviceType>("next_high_size");
+        // g.next_low_size =  Kokkos::View<size_t, DeviceType>("next_low_size");
+
+        // g.current_low = typename Graph<DeviceType>::EntriesType("curr_low", num_nodes);
+        // g.current_high = typename Graph<DeviceType>::EntriesType("curr_high", num_nodes);
+        // g.next_low = typename Graph<DeviceType>::EntriesType("next_lowh", num_nodes);
+        // g.next_high = typename Graph<DeviceType>::EntriesType("next_high", num_nodes);
+
+        // g.gr_current_size = Kokkos::View<size_t, DeviceType>("gr_curr_size");
+        // g.gr_next_size = Kokkos::View<size_t, DeviceType>("gr_next_size");
+
+        // g.gr_current_active = typename Graph<DeviceType>::EntriesType("gr_curr_active", num_nodes);
+        // g.gr_next_active = typename Graph<DeviceType>::EntriesType("gr_next_active", num_nodes);
+
+        // g.current_arc = typename Graph<DeviceType>::MaskViewType("curr_arc", num_nodes);
+
         IntView compressed_u(Kokkos::ViewAllocateWithoutInitializing("compressed_u"), total_edges);
         Kokkos::deep_copy(g.residual_capacity, 0);
 
@@ -168,6 +188,16 @@ public:
         Kokkos::deep_copy(g.next_queue_size, 0);
         
         Kokkos::deep_copy(g.active_phase, 0);
+        
+        // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+
+        // Kokkos::deep_copy(g.current_arc, 0);
+        // Kokkos::deep_copy(g.gr_current_size, 0);
+        // Kokkos::deep_copy(g.gr_next_size, 0);
+        // Kokkos::deep_copy(g.next_low_size, 0);
+        // Kokkos::deep_copy(g.current_low_size, 0);
+        // Kokkos::deep_copy(g.current_high_size, 0);
+        // Kokkos::deep_copy(g.next_high_size, 0);
 
         return g;
     }

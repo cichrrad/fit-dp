@@ -98,6 +98,10 @@ struct Graph
     // lay dormant -- massive memory bandwith for minimal work
     // + A lot of branch divergence in the "wavefronts" (or cuda counterpart)
 
+    // Queue sizes (single-element Views for device access)
+    Kokkos::View<size_t, DeviceType> current_queue_size;
+    Kokkos::View<size_t, DeviceType> next_queue_size;
+
     // Added Excess: Buffer for atomic updates.
     // Size: num_nodes
     // Behavior:
@@ -115,10 +119,6 @@ struct Graph
     // - ELIMINATES the need to clear a flag array every iteration.
     Kokkos::View<int *, DeviceType> active_iteration_mask;
 
-    // Queue sizes (single-element Views for device access)
-    Kokkos::View<size_t, DeviceType> current_queue_size;
-    Kokkos::View<size_t, DeviceType> next_queue_size;
-
     // NOTE: -- Work counter to count
     // work per vertex is not here,
     // because we can make 'process' parallel reduce
@@ -129,6 +129,29 @@ struct Graph
 
     // Tracks the iteration a node was processed in
     Kokkos::View<int *, DeviceType> active_phase;
+
+    // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+
+    // low/high queues
+    // Kokkos::View<NodeIndex *, DeviceType> current_low;
+    // Kokkos::View<NodeIndex *, DeviceType> next_low;
+    // Kokkos::View<NodeIndex *, DeviceType> current_high;
+    // Kokkos::View<NodeIndex *, DeviceType> next_high;
+
+    // Kokkos::View<size_t, DeviceType> current_low_size;
+    // Kokkos::View<size_t, DeviceType> next_low_size;
+    // Kokkos::View<size_t, DeviceType> current_high_size;
+    // Kokkos::View<size_t, DeviceType> next_high_size;
+
+    // // GR
+    // Kokkos::View<NodeIndex *, DeviceType> gr_current_active;
+    // Kokkos::View<NodeIndex *, DeviceType> gr_next_active;
+
+    // Kokkos::View<size_t, DeviceType> gr_current_size;
+    // Kokkos::View<size_t, DeviceType> gr_next_size;
+
+    // // arc
+    // Kokkos::View<int *, DeviceType> current_arc;
 
     // -------------------------------------------------------
     // Helpers

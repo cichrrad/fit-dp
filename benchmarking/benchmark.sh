@@ -96,22 +96,37 @@ for dimacs_file in graphs/dimacs/*.dimacs; do
     # Run binaries
     for iter in {1..10}; do
         
+        # - hipr4
+        run_benchmark "hipr4" "./binaries/hipr4 < \"$dimacs_file\"" "$iter" ""
+        
         # - ECL_MaxFlow
-        run_benchmark "ECL_MaxFlow" "./binaries/ECL_MaxFlow \"$ecl_file\" $source_0 $sink_0" "$iter" ""
+        # this crashes GPU randomly for some reason, better to run it alone ???
+        # might be cause we are running from devcontainer with GPU passthrough, though idk 
+        # run_benchmark "ECL_MaxFlow" "./binaries/ECL_MaxFlow \"$ecl_file\" $source_0 $sink_0" "$iter" ""
         
         # - hpf_pseudo_fifo
         run_benchmark "hpf_pseudo_fifo" "./binaries/hpf_pseudo_fifo < \"$dimacs_file\"" "$iter" ""
-        
-        # - hipr4
-        run_benchmark "hipr4" "./binaries/hipr4 < \"$dimacs_file\"" "$iter" ""
         
         # - pbbs_syncpar
         run_benchmark "pbbs_syncpar" "./binaries/pbbs_syncpar \"$pbbs_file\"" "$iter" ""
         
         # - knfs_cpu & knfs_gpu (With thread options)
-        for t in 128; do
+        for t in 0; do
+            # run_benchmark "knfs_cpu_AE" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AE \"$dimacs_file\" $t" "$iter" "$t"
+            # run_benchmark "knfs_gpu_AE" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AE \"$dimacs_file\" $t" "$iter" "$t"
+            
+            # run_benchmark "knfs_cpu_AP" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AP \"$dimacs_file\" $t" "$iter" "$t"
+            # run_benchmark "knfs_gpu_AP" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AP \"$dimacs_file\" $t" "$iter" "$t"
+              
+            # run_benchmark "knfs_cpu_AP2" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AP2 \"$dimacs_file\" $t" "$iter" "$t"
+            # run_benchmark "knfs_gpu_AP2" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AP2 \"$dimacs_file\" $t" "$iter" "$t"
+            
+            # run_benchmark "knfs_cpu_old" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_old \"$dimacs_file\" $t" "$iter" "$t"
+            # run_benchmark "knfs_gpu_old" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_old \"$dimacs_file\" $t" "$iter" "$t"
+            
             run_benchmark "knfs_cpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu \"$dimacs_file\" $t" "$iter" "$t"
             run_benchmark "knfs_gpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu \"$dimacs_file\" $t" "$iter" "$t"
+            
         done
 
     done

@@ -101,7 +101,6 @@ int main(int argc, char *argv[])
             }
             int next_iter_mask = iteration + 1;
 
-
             // PROCESS =================================================
             Kokkos::parallel_for(
                 "process_kernel",
@@ -301,14 +300,14 @@ int main(int argc, char *argv[])
                     KOKKOS_LAMBDA(const int &i) {
                         int u = g.next_active(i);
                         long long incoming = g.added_excess(u);
-                        g.active_phase(u) = next_iter_mask;
                         // update excess added by process
                         // kernel prior, so that excess
                         // is up-to-date for next iter
-                        if (incoming > 0)
+                        if (incoming > 0 || g.excess(u))
                         {
                             g.excess(u) += incoming;
                             g.added_excess(u) = 0;
+                            g.active_phase(u) = next_iter_mask;
                         }
                         int d_proposed = g.new_label(u);
                         int d_current = g.label(u);

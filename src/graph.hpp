@@ -133,25 +133,25 @@ struct Graph
     // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
 
     // low/high queues
-    // Kokkos::View<NodeIndex *, DeviceType> current_low;
-    // Kokkos::View<NodeIndex *, DeviceType> next_low;
-    // Kokkos::View<NodeIndex *, DeviceType> current_high;
-    // Kokkos::View<NodeIndex *, DeviceType> next_high;
+    Kokkos::View<NodeIndex *, DeviceType> current_low;
+    Kokkos::View<NodeIndex *, DeviceType> next_low;
+    Kokkos::View<NodeIndex *, DeviceType> current_high;
+    Kokkos::View<NodeIndex *, DeviceType> next_high;
 
-    // Kokkos::View<size_t, DeviceType> current_low_size;
-    // Kokkos::View<size_t, DeviceType> next_low_size;
-    // Kokkos::View<size_t, DeviceType> current_high_size;
-    // Kokkos::View<size_t, DeviceType> next_high_size;
+    Kokkos::View<size_t, DeviceType> current_low_size;
+    Kokkos::View<size_t, DeviceType> next_low_size;
+    Kokkos::View<size_t, DeviceType> current_high_size;
+    Kokkos::View<size_t, DeviceType> next_high_size;
 
-    // // GR
-    // Kokkos::View<NodeIndex *, DeviceType> gr_current_active;
-    // Kokkos::View<NodeIndex *, DeviceType> gr_next_active;
+    // GR
+    Kokkos::View<NodeIndex *, DeviceType> gr_current_active;
+    Kokkos::View<NodeIndex *, DeviceType> gr_next_active;
 
-    // Kokkos::View<size_t, DeviceType> gr_current_size;
-    // Kokkos::View<size_t, DeviceType> gr_next_size;
+    Kokkos::View<size_t, DeviceType> gr_current_size;
+    Kokkos::View<size_t, DeviceType> gr_next_size;
 
-    // // arc
-    // Kokkos::View<int *, DeviceType> current_arc;
+    // arc
+    Kokkos::View<int *, DeviceType> current_arc;
 
     // -------------------------------------------------------
     // Helpers

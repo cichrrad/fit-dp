@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
         std::cout << ">> IO Time (CSV Read): " << io_duration.count() << " seconds.\n";
 
         using Device = Kokkos::DefaultExecutionSpace;
-        std::cout << "Running on: " << typeid(Device).name() << "\n";
+        auto pseudo_warp_size = Kokkos::TeamPolicy<Device>::vector_length_max();
+        std::cout << "Running on    : " << typeid(Device).name() << "\n";
+        std::cout << "\"Warp\" size   : " << pseudo_warp_size << "\n";
 
         // [TIMER] Start Graph Init
         Kokkos::Timer timer;
@@ -60,6 +62,17 @@ int main(int argc, char *argv[])
         // kick of the algorithm
         // (push from S, add neighbours to intial queue)
         initialize_algorithm(g, s, t, N);
+
+        // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+        size_t h_current_low_size = 0;
+        size_t h_current_high_size = 0;
+        Kokkos::deep_copy(h_current_low_size, g.current_low_size);
+        Kokkos::deep_copy(h_current_high_size, g.current_high_size);
+
+        std::cout << "--- Initial Queue Routing ---\n";
+        std::cout << "Low Queue Size (<= " << pseudo_warp_size << " edges): " << h_current_low_size << "\n";
+        std::cout << "High Queue Size (> " << pseudo_warp_size << " edges): " << h_current_high_size << "\n";
+        // ==========================================
 
         // [TIMER] End Graph Init
         // NOTE: -- There is Kokkos::Fence in initialize_algorithm
@@ -78,6 +91,7 @@ int main(int argc, char *argv[])
         // [TIMER] Start Algorithm
         timer.reset();
 
+        // will be: h_current_low_size + h_current_high_size > 0
         while (h_current_q_size > 0)
         {
 
@@ -87,17 +101,45 @@ int main(int argc, char *argv[])
                 iterations_since_last_gr = 0;
                 // reset size
                 Kokkos::deep_copy(g.current_queue_size, 0);
+    
+                // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+                Kokkos::deep_copy(g.current_low_size, 0);
+                Kokkos::deep_copy(g.current_high_size, 0);
 
                 // global_relabel uses queues, so we need to rebuild the
                 // set of active vertices for this iteration
                 Kokkos::parallel_for("Rebuild_Active_Set", Kokkos::RangePolicy<Device>(0, N), KOKKOS_LAMBDA(const int v) {
+                    
+                    // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+                    g.current_arc(v) = 0;
+                    
                     if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
-                            int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
-                            g.current_active(pos) = v;
+                        int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
+                        g.current_active(pos) = v;
+                        g.active_iteration_mask(v)=iteration;
+                        // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+                        int row_start = g.row_map(v);
+                        int row_end = g.row_map(v + 1);
+                        if (row_end - row_start > pseudo_warp_size)
+                        {
+                            size_t qh_pos = Kokkos::atomic_fetch_add(&g.current_high_size(), 1);
+                            g.current_high(qh_pos) = v;
+                        }
+                        else
+                        {
+                            size_t ql_pos = Kokkos::atomic_fetch_add(&g.current_low_size(), 1);
+                            g.current_low(ql_pos) = v;
+                        }
+
                     } });
                 Kokkos::fence();
 
                 Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
+                    
+                // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+                Kokkos::deep_copy(h_current_high_size, g.current_high_size);
+                Kokkos::deep_copy(h_current_low_size, g.current_low_size);
+
             }
             int next_iter_mask = iteration + 1;
 
@@ -289,9 +331,17 @@ int main(int argc, char *argv[])
 
             // Check Next Queue
             size_t h_next_q_size = 0;
+
+            // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+            size_t h_next_low_size = 0;
+            size_t h_next_high_size = 0;
+
             Kokkos::deep_copy(h_next_q_size, g.next_queue_size);
+            Kokkos::deep_copy(h_next_low_size, g.next_low_size);
+            Kokkos::deep_copy(h_next_high_size, g.next_high_size);
 
             // APPLY =================================================
+            // will be: h_current_low_size + h_current_high_size > 0
             if (h_next_q_size > 0)
             {
                 Kokkos::parallel_for(
@@ -327,12 +377,20 @@ int main(int argc, char *argv[])
             // QUEUE SWAP
             std::swap(g.current_active, g.next_active);
             std::swap(g.current_queue_size, g.next_queue_size);
-            // TODO -- is this necessary ? Its just 1 number, but the overhead
-            // must be big -- maybe there is a way to do this just on device?
             Kokkos::deep_copy(g.next_queue_size, 0);
 
             h_current_q_size = h_next_q_size;
             iteration++;
+
+            // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+            std::swap(g.current_high, g.next_high);
+            std::swap(g.current_low, g.next_low);
+            std::swap(g.current_high_size, g.next_high_size);
+            std::swap(g.current_low_size, g.next_low_size);
+
+            Kokkos::deep_copy(g.next_high_size, 0);
+            Kokkos::deep_copy(g.next_low_size, 0);
+
         }
 
         // [TIMER] End Algorithm

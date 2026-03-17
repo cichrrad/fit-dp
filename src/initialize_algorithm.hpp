@@ -5,11 +5,12 @@
 #include "graph.hpp"
 
 template <class DeviceType>
-void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
+void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n, int C = 1)
 {
     using ExecutionSpace = typename DeviceType::execution_space;
     using RangePolicy = Kokkos::RangePolicy<ExecutionSpace>;
     using ValueType = typename Graph<DeviceType>::ValueType;
+    auto pseudo_warp_size = Kokkos::TeamPolicy<DeviceType>::vector_length_max();
 
     int s_row_start, s_row_end;
     {
@@ -28,7 +29,6 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
         "Saturate_Source_Edges",
         RangePolicy(s_row_start, s_row_end),
         KOKKOS_LAMBDA(const int &edge_idx, long long &local_pushed_flow) {
-            
             // Get edge target and capacity
             int v = g.entries(edge_idx);
             long long cap = g.residual_capacity(edge_idx);
@@ -36,7 +36,8 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
             // Technically not needed, as each edge is managed by 1 thread
             // and hould have capacity as we just
             // loaded the graph
-            if (cap > 0) {
+            if (cap > 0)
+            {
                 // Push Flow
                 g.residual_capacity(edge_idx) = 0;
 
@@ -50,14 +51,29 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n)
                 // (else multiple threads might touch v)
                 g.excess(v) += cap;
 
-                if (v != s && v != t) {
+                if (v != s && v != t)
+                {
                     // Add to current queue
+                    g.active_iteration_mask(v) = 1;
+                    g.active_phase(v) = 1;
+
                     size_t q_pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
                     g.current_active(q_pos) = v;
 
+                    // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
+                    int row_start = g.row_map(v);
+                    int row_end = g.row_map(v + 1);
+                    if (row_end - row_start > pseudo_warp_size * C)
+                    {
+                        size_t qh_pos = Kokkos::atomic_fetch_add(&g.current_high_size(), 1);
+                        g.current_high(qh_pos) = v;
+                    }
+                    else
+                    {
+                        size_t ql_pos = Kokkos::atomic_fetch_add(&g.current_low_size(), 1);
+                        g.current_low(ql_pos) = v;
+                    }
                     // Mark as active in iteration mask for start of algo
-                    g.active_iteration_mask(v) = 1;
-                    g.active_phase(v) = 1;
                 }
 
                 // Accumulate total flow pushed for the reduction

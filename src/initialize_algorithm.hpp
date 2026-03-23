@@ -57,9 +57,6 @@ void initialize_algorithm(Graph<DeviceType> &g, int s, int t, int n, int C = 1)
                     g.active_iteration_mask(v) = 1;
                     g.active_phase(v) = 1;
 
-                    size_t q_pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
-                    g.current_active(q_pos) = v;
-
                     // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
                     int row_start = g.row_map(v);
                     int row_end = g.row_map(v + 1);

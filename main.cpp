@@ -82,17 +82,14 @@ int main(int argc, char *argv[])
 
         // [HOST] Variables
         int iteration = 1;
-        size_t h_current_q_size = 0;
         const long long gr_iter_trigger = 1500;
-
         long long iterations_since_last_gr = 0;
-        Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
 
         // [TIMER] Start Algorithm
         timer.reset();
 
         // will be: h_current_low_size + h_current_high_size > 0
-        while (h_current_q_size > 0)
+        while (h_current_low_size + h_current_high_size > 0)
         {
 
             if (iterations_since_last_gr > gr_iter_trigger)
@@ -100,8 +97,6 @@ int main(int argc, char *argv[])
                 global_relabel(g, s, t, N);
                 iterations_since_last_gr = 0;
                 // reset size
-                Kokkos::deep_copy(g.current_queue_size, 0);
-    
                 // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
                 Kokkos::deep_copy(g.current_low_size, 0);
                 Kokkos::deep_copy(g.current_high_size, 0);
@@ -114,8 +109,7 @@ int main(int argc, char *argv[])
                     g.current_arc(v) = 0;
                     
                     if (v != s && v != t && g.excess(v) > 0 && g.label(v) < N) {
-                        int pos = Kokkos::atomic_fetch_add(&g.current_queue_size(), 1);
-                        g.current_active(pos) = v;
+
                         g.active_iteration_mask(v)=iteration;
                         // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
                         int row_start = g.row_map(v);
@@ -134,235 +128,421 @@ int main(int argc, char *argv[])
                     } });
                 Kokkos::fence();
 
-                Kokkos::deep_copy(h_current_q_size, g.current_queue_size);
-                    
                 // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
                 Kokkos::deep_copy(h_current_high_size, g.current_high_size);
                 Kokkos::deep_copy(h_current_low_size, g.current_low_size);
-
             }
             int next_iter_mask = iteration + 1;
 
             // PROCESS =================================================
-            Kokkos::parallel_for(
-                "process_kernel",
-                Kokkos::RangePolicy<Device>(0, h_current_q_size),
-                KOKKOS_LAMBDA(const int &i) {
-                    int u = g.current_active(i);
-                    if (u == s || u == t)
-                    {
-                        return;
-                    }
 
+            // low vertices
+            if (h_current_low_size > 0)
+            {
+
+                // 1. Define standard 1D RangePolicy
+                Kokkos::RangePolicy<Device> policy_low(0, h_current_low_size);
+
+                Kokkos::parallel_for("process_low_kernel", policy_low, KOKKOS_LAMBDA(const int &i) {
+                    int u = g.current_low(i);
+
+                    if (u == s || u == t) return;
+                
                     long long e_u = g.excess(u);
-
-                    // label at the moment kernel was
-                    // launched (this wont change)
                     const int d_u_start = g.label(u);
-
-                    // current label reflecting
-                    // local relabeling when discharging
                     int d_u_current = d_u_start;
-
-                    // edges from u
+                
                     int row_start = g.row_map(u);
                     int row_end = g.row_map(u + 1);
 
-                    // We loop until discharged or blocked by a conflict
-                    while (e_u > 0)
-                    {
-                        // GR contribution
-                        // this is inside while loop
-                        // se add this every time
-                        // we re-enter it, because
-                        // we rescan edges
 
-                        // "Infinity"
-                        // (N should do)
+                    // Load the saved arc (edge offset)
+                    int current_edge_idx = row_start + g.current_arc(u);
+                
+                    while (e_u > 0) {
                         unsigned long min_d_neighbor = N + 1;
+                        int first_skipped_idx = -1;
                         bool skipped_admissible_edge = false;
-
-                        // go over all the edges from u and try
-                        // to push along them if possible
-                        for (int idx = row_start; idx < row_end; ++idx)
-                        {
-                            // get target of edge idx
-                            // and cap (residual) of idx
+                    
+                        // 2. Resume from current_edge_idx instead of row_start
+                        for (int idx = current_edge_idx; idx < row_end; ++idx) {
                             int v = g.entries(idx);
                             long long cap = g.residual_capacity(idx);
-
-                            // can we still push?
-                            if (cap > 0)
-                            {
+                        
+                            if (cap > 0) {
                                 int d_v = g.label(v);
-
-                                // note min neighbour for relabeling later
-                                if (d_v < min_d_neighbor)
-                                    min_d_neighbor = d_v;
-
-                                // admissible ?
-                                if (d_u_current == d_v + 1)
-                                {
+                                if (d_v < min_d_neighbor) min_d_neighbor = d_v;
+                            
+                                if (d_u_current == d_v + 1) {
                                     bool wins = true;
 
-                                    if (g.active_phase(v) == iteration)
-                                    {
-                                        // Conflict detected! Fall back to the deterministic tie-breaker
-                                        // using the labels from the start of the iteration.
-                                        wins = (d_u_start < d_v - 1) ||
-                                               (d_u_start == d_v + 1) ||
-                                               (d_u_start == d_v && u < v);
+                                    if (g.active_phase(v) == iteration) {
+                                        wins =  (d_u_start < d_v - 1) || 
+                                                (d_u_start == d_v + 1) || 
+                                                (d_u_start == d_v && u < v);
                                     }
-
-                                    if (wins)
-                                    {
-                                        // u won, so u can now safely
-                                        // discharge along edge idx
-                                        // => win condition check
-                                        // allows us to NOT use atomics
-                                        // for the pushing
+                                
+                                    if (wins) {
                                         long long delta = (e_u < cap) ? e_u : cap;
-
+                                    
                                         g.residual_capacity(idx) -= delta;
                                         g.residual_capacity(g.reverse_edge(idx)) += delta;
                                         e_u -= delta;
-                                        // update so that v has it next iteration
-                                        // this has to be atomic as u' might exist
-                                        // also pushing into v at the same time
-                                        Kokkos::atomic_add(&g.added_excess(v), delta);
 
-                                        // Enqueue v
-                                        //(it either did not have excess and now it does = active)
-                                        // OR
-                                        //(it did and whatever it did with it -- pushed all or not
-                                        // -- we just added more)
-                                        if (v != s && v != t)
-                                        {
-                                            // mark vertices active in NEXT turn with "generational mask"
-                                            // which uses iteration count
-                                            // => removes need for clear between iterations
-                                            // like with bit/bool masks
+                                        // Must be atomic because other threads might push to v simultaneously 
+                                        Kokkos::atomic_add(&g.added_excess(v), delta);
+                                    
+                                        // 3. Dynamic Routing during Enqueue
+                                        if (v != s && v != t) {
                                             int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
-                                            if (seen_mask != next_iter_mask)
-                                            {
-                                                size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
-                                                g.next_active(insert_pos) = v;
+                                            // If we are the thread that activated v 
+                                            if (seen_mask != next_iter_mask) {
+                                                int degree_v = g.row_map(v + 1) - g.row_map(v);
+
+                                                // Route to the correct queue!
+                                                if (degree_v <= 32) {
+                                                    size_t pos = Kokkos::atomic_fetch_add(&g.next_low_size(), 1);
+                                                    g.next_low(pos) = v;
+                                                } else {
+                                                    size_t pos = Kokkos::atomic_fetch_add(&g.next_high_size(), 1);
+                                                    g.next_high(pos) = v;
+                                                }
                                             }
                                         }
-
-                                        // did we just push all excess of u?
-                                        // if so, break now (from the for loop)
-                                        if (e_u == 0)
+                                    
+                                        if (e_u == 0) {
+                                            // 4. Save the arc!
+                                            // If we skipped an edge earlier, anchor the arc to it.
+                                            // Otherwise, anchor it to the current edge where we ran out of excess
+                                            current_edge_idx = (first_skipped_idx != -1) ? first_skipped_idx : idx;
                                             break;
-                                    }
-                                    // we lost = wait it out
-                                    else
-                                    {
-                                        // Found admissible edge, but lost conflict.
+                                        }
+                                    } else {
                                         skipped_admissible_edge = true;
-                                        // NOTE -- this might be too strict
-                                        // -- continue might be good too
-                                        // and it would allow other edges
-                                        // to attempt to push to them
-
-                                        // break;
-                                        continue; // seems to work as expected
+                                        // Record the VERY FIRST skipped index.
+                                        if (first_skipped_idx == -1) {
+                                            first_skipped_idx = idx;
+                                        }
+                                        continue; 
                                     }
                                 }
                             }
-                            // we cannot push along this edge
-                            // as it is full
-                        }
-
-                        // did we break from the for loop
-                        // because we have nothing left to
-                        // push ? if so, break
-                        // (from the while loop)
-                        if (e_u == 0)
-                            break;
-
-                        // the moment we lost the win check
-                        // = we know we will lose it
-                        // every time this iteration
-                        // (because we use "old" label)
-                        // = break
-                        // TODO verify????
-                        if (skipped_admissible_edge)
-                            break;
-
-                        // If we are here, we have excess AND no admissible edges.
-                        // => elabel to (min_neighbor + 1), so we are "uphill"
-                        // from it and can potentially push to it
+                        } // end for
+                    
+                        if (e_u == 0 || skipped_admissible_edge) break;
+                    
+                        // 5. Relabel
                         int new_d = min_d_neighbor + 1;
-
-                        // Apply relabel if valid and increasing
-                        if (new_d < N + 1 && new_d > d_u_start)
-                        {
+                        if (new_d < N + 1 && new_d > d_u_start) {
                             d_u_current = new_d;
                             g.new_label(u) = new_d;
-                        }
-                        else
-                        {
-                            // If we can't push and can't relabel (e.g. disconnected), we are stuck.
+
+                            // CRITICAL: Reset the arc on relabel!
+                            current_edge_idx = row_start;
+                            g.current_arc(u) = 0; 
+                        } else {
                             break;
                         }
                     }
-
-                    // Write back remaining excess
+                
+                    // Write back state
                     g.excess(u) = e_u;
 
-                    // enqueue Self if still active / relabeled
-                    if (e_u > 0 || d_u_current > d_u_start)
-                    {
+                    // Update the global arc tracker if we exited the while loop without relabeling
+                    if (d_u_current == d_u_start) {
+                        g.current_arc(u) = current_edge_idx - row_start;
+                    }
+                
+                    // 6. Self-Enqueue (u is a low-degree node, so it stays in the low queue)
+                    if (e_u > 0 || d_u_current > d_u_start) {
                         int seen_mask = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
-                        if (seen_mask != next_iter_mask)
-                        {
-                            size_t insert_pos = Kokkos::atomic_fetch_add(&g.next_queue_size(), 1);
-                            g.next_active(insert_pos) = u;
+                        if (seen_mask != next_iter_mask) {
+                            size_t pos = Kokkos::atomic_fetch_add(&g.next_low_size(), 1);
+                            g.next_low(pos) = u;
+                        }
+                    } });
+                // update work metric
+                iterations_since_last_gr++;
+                Kokkos::fence("after_process_low_fence");
+            }
+
+            // high vertices
+            if (h_current_high_size > 0)
+            {
+
+                Kokkos::TeamPolicy<Device> policy_high(h_current_high_size, 32);
+                Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Device>::member_type &team) {
+                // League rank maps exactly to the active vertex index
+                int u = g.current_high(team.league_rank());
+                if (u == s || u == t) return;
+                
+                // e_u is kept in a local register for EVERY thread in the team.
+                // We will update it uniformly so it stays synchronized.
+                long long e_u = g.excess(u);
+                const int d_u_start = g.label(u);
+                int d_u_current = d_u_start;
+                
+                int row_start = g.row_map(u);
+                int row_end = g.row_map(u + 1);
+                int degree = row_end - row_start;
+                
+                // Load the current arc (Thread 0 does it, but we broadcast or just let all threads read it)
+                int arc = g.current_arc(u);
+                int first_skipped_chunk = -1;
+                
+                // Loop until discharged or blocked
+                while (e_u > 0) {
+                    unsigned long local_min_d = N + 1;
+                    first_skipped_chunk = -1;
+                    int skipped_admissible = 0; 
+                
+                    // 2. CHUNKING LOGIC
+                    // We process edges in jumps of team_size()
+                    for (int chunk_start = arc; chunk_start < degree; chunk_start += team.team_size()) {
+
+                        // Each thread grabs an edge
+                        int edge_offset = chunk_start + team.team_rank();
+                        int idx = row_start + edge_offset;
+                        bool valid_edge = (edge_offset < degree);
+                    
+                        long long cap = 0;
+                        int v = -1, d_v = N + 1;
+                        bool admissible = false, wins = false;
+                    
+                        if (valid_edge) {
+                            v = g.entries(idx);
+                            cap = g.residual_capacity(idx);
+                            if (cap > 0) {
+                                d_v = g.label(v);
+                                if (d_u_current == d_v + 1) {
+                                    admissible = true;
+                                    wins = true;
+
+                                    if (g.active_phase(v) == iteration) {
+                                        wins =  (d_u_start < d_v - 1) || 
+                                                (d_u_start == d_v + 1) || 
+                                                (d_u_start == d_v && u < v);
+                                    }
+                                }
+                            }
+                        }
+                    
+                        // --- Team Reductions for state ---
+                        // Get the minimum neighbor distance across the chunk
+
+                        // NOTE: - ?? Could we merge this reduce with skipped_admissible to 
+                        // handle both in 1 reduce ??
+                        // TODO: - Merge the reductions
+                        unsigned long thread_min_d = (valid_edge && cap > 0) ? d_v : (N + 1);
+                        unsigned long team_min_d;
+                        Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int dummy, unsigned long& update) {
+                                if (thread_min_d < update) update = thread_min_d;
+                            }, Kokkos::Min<unsigned long>(team_min_d));
+                    
+                        // Did anyone skip an admissible edge?
+                        int thread_skipped = (valid_edge && admissible && !wins) ? 1 : 0;
+                        int team_skipped = 0;
+                        Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int dummy, int& update) {
+                                update += thread_skipped;
+                            }, team_skipped);
+                    
+                    
+                        // 3. TEAM PREFIX SUM FOR PUSHING
+                        long long req_flow = (valid_edge && admissible && wins && cap > 0) ? cap : 0;
+                        long long exclusive_prefix = 0;
+                        long long total_chunk_req = 0;
+                    
+                        // Scan to distribute flow correctly
+                        Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int thread_rank, long long& update, const bool final_pass) {
+                                if (final_pass) { exclusive_prefix = update; }
+                                update += req_flow;
+                        });
+
+                        // Reduce to get total requested flow by the team
+                        Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int dummy, long long& update) {
+                                update += req_flow;
+                            }, total_chunk_req);
+                        // Calculate actual push based on prefix sum and remaining excess
+                        long long actual_push = 0;
+                        if (req_flow > 0) {
+                            long long available = e_u - exclusive_prefix;
+                            if (available > 0) {
+                                actual_push = (req_flow < available) ? req_flow : available;
+                            }
+                        }
+                    
+                        // Apply the flow
+                        if (actual_push > 0) {
+                            g.residual_capacity(idx) -= actual_push;
+                            g.residual_capacity(g.reverse_edge(idx)) += actual_push;
+                            Kokkos::atomic_add(&g.added_excess(v), actual_push);
+                        }
+                    
+                        // Uniformly update e_u for ALL threads in the team
+                        long long total_pushed = (total_chunk_req < e_u) ? total_chunk_req : e_u;
+                        e_u -= total_pushed;
+                    
+                    
+                        // 4. DYNAMIC ENQUEUE WITH BLOCK ATOMICS
+                        int is_high = 0, is_low = 0;
+                    
+                        if (actual_push > 0 && v != s && v != t) {
+                            int seen = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
+                            if (seen != next_iter_mask) {
+                                // NOTE: - This is never OOB access, though it looks
+                                // like one (CSR format perk)
+                                int n_degree = g.row_map(v + 1) - g.row_map(v);
+                                if (n_degree > 32) is_high = 1;
+                                else is_low = 1;
+                            }
+                        }
+                    
+                        // processing high nodes
+                        int high_offset = 0;
+                        Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int dummy, int& update, const bool final_pass) {
+                                if (final_pass) high_offset = update;
+                                update += is_high;
+                            });
+                        
+                        // last thread knows the total
+                        int my_total_h = high_offset + is_high;
+                        
+                        // Broadcast from the last thread (rank = team_size - 1) to the whole team
+                        team.team_broadcast(my_total_h, team.team_size() - 1);
+                        int total_high_enq = my_total_h;
+                        int high_base = 0;
+                        if (team.team_rank() == 0 && total_high_enq > 0) {
+                            // ONE atomic per chunk for the whole team!
+                            high_base = Kokkos::atomic_fetch_add(&g.next_high_size(), total_high_enq);
+                        }
+                        team.team_broadcast(high_base, 0); // Share base index with the team
+                        if (is_high) {
+                            g.next_high(high_base + high_offset) = v;
+                        }
+                    
+                        // [Repeat Block Atomic logic for `is_low` and `next_queue_size_low`]
+                                    // processing high nodes
+                        int low_offset = 0;
+                        Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, team.team_size()), 
+                            [&](const int dummy, int& update, const bool final_pass) {
+                                if (final_pass) low_offset = update;
+                                update += is_low;
+                            });
+                        
+                        // last thread knows the total
+                        int my_total_l = low_offset + is_low;
+                        
+                        // Broadcast from the last thread (rank = team_size - 1) to the whole team
+                        team.team_broadcast(my_total_l, team.team_size() - 1);
+                        int total_low_enq = my_total_l;
+                        int low_base = 0;
+                        if (team.team_rank() == 0 && total_low_enq > 0) {
+                            // ONE atomic per chunk for the whole team!
+                            low_base = Kokkos::atomic_fetch_add(&g.next_low_size(), total_low_enq);
+                        }
+                        team.team_broadcast(low_base, 0); // Share base index with the team
+                        if (is_low) {
+                            g.next_low(low_base + low_offset) = v;
+                        }
+                    
+                        // 5. EARLY EXIT & CURRENT ARC
+                        if (e_u == 0) {
+                            // Thread 0 saves the chunk index to resume later
+                            if (team.team_rank() == 0) {
+                                // Anchor to the first skipped chunk, or the current chunk if no skips occurred
+                                g.current_arc(u) = (first_skipped_chunk != -1) ? first_skipped_chunk : chunk_start;
+                            }
+                            break; // Break the chunk loop
+                        }
+                    } // End of chunk loop
+                
+                    if (e_u == 0 || skipped_admissible) break;
+                
+                    // 6. RELABEL
+                    int new_d = local_min_d + 1;
+                    if (new_d < N + 1 && new_d > d_u_start) {
+                        d_u_current = new_d;
+                        if (team.team_rank() == 0) {
+                            g.new_label(u) = new_d;
+                            g.current_arc(u) = 0; // CRITICAL: Reset arc on relabel!
+                        }
+                        arc = 0; // Rescan from chunk 0
+                    } else {
+                        break; // Stuck
+                    }
+                }
+            
+                // 7. WRITEBACK & SELF-ENQUEUE
+                if (team.team_rank() == 0) {
+                    g.excess(u) = e_u;
+                    if (e_u > 0 || d_u_current > d_u_start) {
+                        int seen = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
+                        if (seen != next_iter_mask) {
+                            // Self enqueue (since u is already high-degree, put it in high queue)
+                            size_t pos = Kokkos::atomic_fetch_add(&g.next_high_size(), 1);
+                            g.next_high(pos) = u;
                         }
                     }
-                });
+                    if (e_u > 0 && d_u_current == d_u_start) {
+                        // We hit the end of the edge list, didn't relabel, but still have excess.
+                        // This only happens if we skipped edges. Reset arc to the skipped chunk.
+                        if (team.team_rank() == 0 && first_skipped_chunk != -1) {
+                            g.current_arc(u) = first_skipped_chunk;
+                        }
+                    }
+                } });
+                // update work metric
+                iterations_since_last_gr++;
+                Kokkos::fence("after_process_high_fence");
+            }
 
             // wait for all threads
-            Kokkos::fence("after_process_fence");
-            // update work metric
-            iterations_since_last_gr++;
             // PROCESS END ==============================================
-
-            // Check Next Queue
-            size_t h_next_q_size = 0;
 
             // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
             size_t h_next_low_size = 0;
             size_t h_next_high_size = 0;
 
-            Kokkos::deep_copy(h_next_q_size, g.next_queue_size);
             Kokkos::deep_copy(h_next_low_size, g.next_low_size);
             Kokkos::deep_copy(h_next_high_size, g.next_high_size);
 
             // APPLY =================================================
-            // will be: h_current_low_size + h_current_high_size > 0
-            if (h_next_q_size > 0)
+            // will be: h_next_low_size + h_next_high_size > 0
+            if (h_next_low_size + h_next_high_size > 0)
             {
                 Kokkos::parallel_for(
                     "apply_kernel",
-                    Kokkos::RangePolicy<Device>(0, h_next_q_size),
+                    Kokkos::RangePolicy<Device>(0, h_next_low_size + h_next_high_size),
                     KOKKOS_LAMBDA(const int &i) {
-                        int u = g.next_active(i);
+                        // fetch from the correct queue based on the global index
+                        int u;
+                        if (i < h_next_low_size)
+                        {
+                            u = g.next_low(i);
+                        }
+                        else
+                        {
+                            u = g.next_high(i - h_next_low_size);
+                        }
+
+                        // same logic
                         long long incoming = g.added_excess(u);
-                        // update excess added by process
-                        // kernel prior, so that excess
-                        // is up-to-date for next iter
+
                         if (incoming > 0 || g.excess(u))
                         {
                             g.excess(u) += incoming;
                             g.added_excess(u) = 0;
                             g.active_phase(u) = next_iter_mask;
                         }
+
                         int d_proposed = g.new_label(u);
                         int d_current = g.label(u);
-                        // if we relabeled during the process
-                        // kernel, update
+
                         if (d_proposed > d_current)
                         {
                             g.label(u) = d_proposed;
@@ -375,11 +555,6 @@ int main(int argc, char *argv[])
             // APPLY END ==============================================
 
             // QUEUE SWAP
-            std::swap(g.current_active, g.next_active);
-            std::swap(g.current_queue_size, g.next_queue_size);
-            Kokkos::deep_copy(g.next_queue_size, 0);
-
-            h_current_q_size = h_next_q_size;
             iteration++;
 
             // THIS IS FOR THE FUTURE EDGE-PARALLEL SHIFT
@@ -390,7 +565,6 @@ int main(int argc, char *argv[])
 
             Kokkos::deep_copy(g.next_high_size, 0);
             Kokkos::deep_copy(g.next_low_size, 0);
-
         }
 
         // [TIMER] End Algorithm

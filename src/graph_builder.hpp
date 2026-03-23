@@ -88,10 +88,6 @@ public:
         g.new_label = typename Graph<DeviceType>::LabelViewType("new_label", num_nodes);
         g.added_excess = typename Graph<DeviceType>::ValueViewType("added_excess", num_nodes);
         g.active_iteration_mask = typename Graph<DeviceType>::MaskViewType("active_mask", num_nodes);
-        g.current_queue_size = Kokkos::View<size_t, DeviceType>("curr_q_size");
-        g.next_queue_size = Kokkos::View<size_t, DeviceType>("next_q_size");
-        g.current_active = typename Graph<DeviceType>::EntriesType("curr_active", num_nodes);
-        g.next_active = typename Graph<DeviceType>::EntriesType("next_active", num_nodes);
         g.active_phase = typename Graph<DeviceType>::MaskViewType("active_phase", num_nodes);
 
 
@@ -184,8 +180,6 @@ public:
         Kokkos::deep_copy(g.new_label, 0);
         Kokkos::deep_copy(g.added_excess, 0);
         Kokkos::deep_copy(g.active_iteration_mask, 0);
-        Kokkos::deep_copy(g.current_queue_size, 0);
-        Kokkos::deep_copy(g.next_queue_size, 0);
         
         Kokkos::deep_copy(g.active_phase, 0);
         

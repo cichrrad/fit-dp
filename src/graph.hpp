@@ -85,12 +85,10 @@ struct Graph
     // Active Set (Current): Nodes active in the current iteration.
     // Size: <=num_nodes (Capacity)
     // Behavior: Dense list of valid indices [0, current_queue_size).
-    Kokkos::View<NodeIndex *, DeviceType> current_active;
 
     // Active Set (Next): Nodes activated for the next iteration.
     // Size: <=num_nodes (Capacity)
     // Behavior: Populated via atomic_fetch_add on 'next_queue_size'.
-    Kokkos::View<NodeIndex *, DeviceType> next_active;
     // no way around atomics, unless we use iteration count
     // to colour vertices for next step -- BUT that will mean
     // we will always launch full sized kernel (on all nodes)
@@ -99,8 +97,6 @@ struct Graph
     // + A lot of branch divergence in the "wavefronts" (or cuda counterpart)
 
     // Queue sizes (single-element Views for device access)
-    Kokkos::View<size_t, DeviceType> current_queue_size;
-    Kokkos::View<size_t, DeviceType> next_queue_size;
 
     // Added Excess: Buffer for atomic updates.
     // Size: num_nodes

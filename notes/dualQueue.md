@@ -71,46 +71,44 @@ Main change is splitting active queue into 2 queues -- low and high queues + add
 // Leagues = number of high-degree nodes in the queue.
 // Team Size = Hardware warp/wavefront size (e.g., 32).
 // --> instead of hardcoding, we should query it 
-Kokkos::TeamPolicy<Device> policy_high(h_current_q_size_high, 32);
-
-Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Device>::member_type& team) {
+    Kokkos::TeamPolicy<Device> policy_high(h_current_high_size, 32);
+    Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Device>::member_type &team) {
     // League rank maps exactly to the active vertex index
-    int u = g.current_active_high(team.league_rank());
-    
+    int u = g.current_high(team.league_rank());
     if (u == s || u == t) return;
-
+    
     // e_u is kept in a local register for EVERY thread in the team.
     // We will update it uniformly so it stays synchronized.
     long long e_u = g.excess(u);
     const int d_u_start = g.label(u);
     int d_u_current = d_u_start;
-
+    
     int row_start = g.row_map(u);
     int row_end = g.row_map(u + 1);
     int degree = row_end - row_start;
-
+    
     // Load the current arc (Thread 0 does it, but we broadcast or just let all threads read it)
     int arc = g.current_arc(u);
-
+    int first_skipped_chunk = -1;
+    
     // Loop until discharged or blocked
     while (e_u > 0) {
         unsigned long local_min_d = N + 1;
-        int first_skipped_chunk = -1;
+        first_skipped_chunk = -1;
         int skipped_admissible = 0; 
-
+    
         // 2. CHUNKING LOGIC
         // We process edges in jumps of team_size()
-        for (int chunk_start = arc; chunk_start < degree; chunk_start += team.team_size()) {
-            
+        for (int chunk_start = arc; chunk_start < degree; chunk_start += team.team_size())
             // Each thread grabs an edge
             int edge_offset = chunk_start + team.team_rank();
             int idx = row_start + edge_offset;
             bool valid_edge = (edge_offset < degree);
-
+        
             long long cap = 0;
             int v = -1, d_v = N + 1;
             bool admissible = false, wins = false;
-
+        
             if (valid_edge) {
                 v = g.entries(idx);
                 cap = g.residual_capacity(idx);
@@ -118,8 +116,7 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     d_v = g.label(v);
                     if (d_u_current == d_v + 1) {
                         admissible = true;
-                        wins = true;
-                        
+                        wins = tru
                         if (g.active_phase(v) == iteration) {
                             wins =  (d_u_start < d_v - 1) || 
                                     (d_u_start == d_v + 1) || 
@@ -128,46 +125,53 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     }
                 }
             }
-
+        
             // --- Team Reductions for state ---
-            // Get the minimum neighbor distance across the chunk
-            
+            // Get the minimum neighbor distance across the chu
             // NOTE: - ?? Could we merge this reduce with skipped_admissible to 
             // handle both in 1 reduce ??
             // TODO: - Merge the reductions
             unsigned long thread_min_d = (valid_edge && cap > 0) ? d_v : (N + 1);
             unsigned long team_min_d;
-            Kokkos::Min<unsigned long> min_reducer(team_min_d);
-            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), thread_min_d, min_reducer);
-            if (team_min_d < local_min_d) local_min_d = team_min_d;
-
+            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                [&](const int dummy, unsigned long& update) {
+                    if (thread_min_d < update) update = thread_min_d;
+                }, Kokkos::Min<unsigned long>(team_min_d));
+        
+            if (team_min_d < local_min_d) {
+               local_min_d = team_min_d;
+        
             // Did anyone skip an admissible edge?
             int thread_skipped = (valid_edge && admissible && !wins) ? 1 : 0;
-            int team_skipped;
-            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), thread_skipped, team_skipped);
-            if (team_skipped > 0){
+            int team_skipped = 0;
+            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                [&](const int dummy, int& update) {
+                    update += thread_skipped;
+                }, team_skipped);
+        
+            if (team_skipped > 0) {
                 skipped_admissible = 1;
                 if (first_skipped_chunk == -1) {
                     first_skipped_chunk = chunk_start;
                 }
-            } 
-
-
+            }
+        
             // 3. TEAM PREFIX SUM FOR PUSHING
             long long req_flow = (valid_edge && admissible && wins && cap > 0) ? cap : 0;
             long long exclusive_prefix = 0;
             long long total_chunk_req = 0;
-
+        
             // Scan to distribute flow correctly
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, team.team_size()), 
                 [&](const int thread_rank, long long& update, const bool final_pass) {
                     if (final_pass) { exclusive_prefix = update; }
                     update += req_flow;
-            });
-            
+            }
             // Reduce to get total requested flow by the team
-            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), req_flow, total_chunk_req);
-
+            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, team.team_size()), 
+                [&](const int dummy, long long& update) {
+                    update += req_flow;
+                }, total_chunk_req);
             // Calculate actual push based on prefix sum and remaining excess
             long long actual_push = 0;
             if (req_flow > 0) {
@@ -176,23 +180,22 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     actual_push = (req_flow < available) ? req_flow : available;
                 }
             }
-
+        
             // Apply the flow
             if (actual_push > 0) {
                 g.residual_capacity(idx) -= actual_push;
                 g.residual_capacity(g.reverse_edge(idx)) += actual_push;
                 Kokkos::atomic_add(&g.added_excess(v), actual_push);
             }
-
+        
             // Uniformly update e_u for ALL threads in the team
             long long total_pushed = (total_chunk_req < e_u) ? total_chunk_req : e_u;
             e_u -= total_pushed;
-
-
+        
+        
             // 4. DYNAMIC ENQUEUE WITH BLOCK ATOMICS
-            int needs_enqueue = 0;
             int is_high = 0, is_low = 0;
-
+        
             if (actual_push > 0 && v != s && v != t) {
                 int seen = Kokkos::atomic_exchange(&g.active_iteration_mask(v), next_iter_mask);
                 if (seen != next_iter_mask) {
@@ -203,7 +206,7 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     else is_low = 1;
                 }
             }
-
+        
             // processing high nodes
             int high_offset = 0;
             Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, team.team_size()), 
@@ -211,23 +214,23 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     if (final_pass) high_offset = update;
                     update += is_high;
                 });
-
+            
             // last thread knows the total
             int my_total_h = high_offset + is_high;
-
+            
             // Broadcast from the last thread (rank = team_size - 1) to the whole team
-            int total_high_enq = team.team_broadcast(my_total_h, team.team_size() - 1);
-
+            team.team_broadcast(my_total_h, team.team_size() - 1);
+            int total_high_enq = my_total_h;
             int high_base = 0;
             if (team.team_rank() == 0 && total_high_enq > 0) {
                 // ONE atomic per chunk for the whole team!
-                high_base = Kokkos::atomic_fetch_add(&g.next_queue_size_high(), total_high_enq);
+                high_base = Kokkos::atomic_fetch_add(&g.next_high_size(), total_high_enq);
             }
-            high_base = team.team_broadcast(high_base, 0); // Share base index with the team
+            team.team_broadcast(high_base, 0); // Share base index with the team
             if (is_high) {
-                g.next_active_high(high_base + high_offset) = v;
+                g.next_high(high_base + high_offset) = v;
             }
-
+        
             // [Repeat Block Atomic logic for `is_low` and `next_queue_size_low`]
                         // processing high nodes
             int low_offset = 0;
@@ -236,23 +239,23 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                     if (final_pass) low_offset = update;
                     update += is_low;
                 });
-
+            
             // last thread knows the total
             int my_total_l = low_offset + is_low;
-
+            
             // Broadcast from the last thread (rank = team_size - 1) to the whole team
-            int total_low_enq = team.team_broadcast(my_total_l, team.team_size() - 1);
-
+            team.team_broadcast(my_total_l, team.team_size() - 1);
+            int total_low_enq = my_total_l;
             int low_base = 0;
             if (team.team_rank() == 0 && total_low_enq > 0) {
                 // ONE atomic per chunk for the whole team!
-                low_base = Kokkos::atomic_fetch_add(&g.next_queue_size_low(), total_low_enq);
+                low_base = Kokkos::atomic_fetch_add(&g.next_low_size(), total_low_enq);
             }
-            low_base = team.team_broadcast(low_base, 0); // Share base index with the team
+            team.team_broadcast(low_base, 0); // Share base index with the team
             if (is_low) {
-                g.next_active_low(low_base + low_offset) = v;
+                g.next_low(low_base + low_offset) = v;
             }
-
+        
             // 5. EARLY EXIT & CURRENT ARC
             if (e_u == 0) {
                 // Thread 0 saves the chunk index to resume later
@@ -263,9 +266,9 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                 break; // Break the chunk loop
             }
         } // End of chunk loop
-
+    
         if (e_u == 0 || skipped_admissible) break;
-
+    
         // 6. RELABEL
         int new_d = local_min_d + 1;
         if (new_d < N + 1 && new_d > d_u_start) {
@@ -287,8 +290,8 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
             int seen = Kokkos::atomic_exchange(&g.active_iteration_mask(u), next_iter_mask);
             if (seen != next_iter_mask) {
                 // Self enqueue (since u is already high-degree, put it in high queue)
-                size_t pos = Kokkos::atomic_fetch_add(&g.next_queue_size_high(), 1);
-                g.next_active_high(pos) = u;
+                size_t pos = Kokkos::atomic_fetch_add(&g.next_high_size(), 1);
+                g.next_high(pos) = u;
             }
         }
         if (e_u > 0 && d_u_current == d_u_start) {
@@ -298,8 +301,7 @@ Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kok
                 g.current_arc(u) = first_skipped_chunk;
             }
         }
-    }
-});
+    } });
 ```
 
 ## DRAFT -- LOW NODES PROCESS

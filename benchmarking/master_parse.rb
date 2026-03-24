@@ -24,6 +24,8 @@ FLOW_REGEXES = {
   'knfs_cpu_old' => /MAX FLOW IS\s+(\d+)/,
   'knfs_gpu' => /MAX FLOW IS\s+(\d+)/,
   'knfs_cpu' => /MAX FLOW IS\s+(\d+)/,
+  'knfs_gpu_multipar' => /MAX FLOW IS\s+(\d+)/,
+  'knfs_cpu_multipar' => /MAX FLOW IS\s+(\d+)/
 }
 
 log_file = ARGV[0]
@@ -154,7 +156,7 @@ results.each do |graph_name, solvers_data|
     is_correct = false
     c_class = ''
     c_text = ''
-    
+
     if flows.empty?
       c_class = 'timeout-cell'
       c_text = 'Timed out'
@@ -174,7 +176,7 @@ results.each do |graph_name, solvers_data|
       c_class = 'error'
       c_text = unique_flows.first + timeout_str
     end
-    
+
     row_correctness << { class: c_class, text: c_text }
     row_is_correct << is_correct
 
@@ -216,24 +218,24 @@ html_template = <<~ERB
       body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; background-color: #f4f6f8; }
       .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
       h1, h2 { color: #2c3e50; }
-      
+  #{'    '}
       .section-header { margin-top: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; }
       .section-header h2 { margin: 0; border: none; padding: 0; }
-      
+  #{'    '}
       table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 0.95em; }
       th, td { border: 1px solid #cbd5e1; padding: 12px 15px; text-align: left; vertical-align: top; }
       th { background-color: #f8fafc; font-weight: bold; color: #475569; position: sticky; top: 0; }
-      
+  #{'    '}
       /* Cell Styles */
-      .match { background-color: #dcfce7; color: #166534; } 
-      .match-time { background-color: #dcfce7; color: #166534; font-weight: bold; border: 2px solid #22c55e; } 
-      .warning { background-color: #fef08a; color: #854d0e; } 
-      .error { background-color: #fee2e2; color: #991b1b; } 
-      .timeout-cell { background-color: #f1f5f9; color: #64748b; font-style: italic; } 
-      
+      .match { background-color: #dcfce7; color: #166534; }#{' '}
+      .match-time { background-color: #dcfce7; color: #166534; font-weight: bold; border: 2px solid #22c55e; }#{' '}
+      .warning { background-color: #fef08a; color: #854d0e; }#{' '}
+      .error { background-color: #fee2e2; color: #991b1b; }#{' '}
+      .timeout-cell { background-color: #f1f5f9; color: #64748b; font-style: italic; }#{' '}
+  #{'    '}
       .timeout-text { color: #ef4444; font-size: 0.85em; font-weight: bold; }
       .truth-match { font-weight: bold; text-decoration: underline; }
-      
+  #{'    '}
       /* Perfect Graph Highlighting */
       .perfect-graph td { border-top: 2px solid #3b82f6; border-bottom: 2px solid #3b82f6; }
       .perfect-graph .graph-name { background-color: #eff6ff; color: #1d4ed8; font-weight: bold; }
@@ -244,7 +246,7 @@ html_template = <<~ERB
       .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
       .chart-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
       .chart-card h3 { margin-top: 0; font-size: 1.1em; color: #475569; text-align: center; }
-      
+  #{'    '}
       /* Toggle switch label */
       .toggle-label { cursor: pointer; font-weight: bold; color: #475569; font-size: 0.9em; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1;}
       .toggle-label:hover { background: #e2e8f0; }
@@ -316,7 +318,7 @@ html_template = <<~ERB
         </label>
       </div>
       <p style="font-size: 0.85em; color: #64748b; margin-top: -5px;">* Bars for solvers that yielded an <b>incorrect flow</b> or non-deterministic results are drawn with dashed red borders.</p>
-      
+  #{'    '}
       <div class="chart-grid">
         <% graphs_data.each_with_index do |row, index| %>
           <div class="chart-card">
@@ -345,7 +347,7 @@ html_template = <<~ERB
             callbacks: {
               label: function(context) {
                 const valStr = context.raw === null ? 'Timeout' : context.raw + ' s';
-                // Tooltip doesn't easily access external is_correct arrays without dirty lookups, 
+                // Tooltip doesn't easily access external is_correct arrays without dirty lookups,#{' '}
                 // but visually the bar handles the warning anyway.
                 return valStr;
               }
@@ -361,7 +363,7 @@ html_template = <<~ERB
       graphsData.forEach((graph, index) => {
         const canvas = document.getElementById('chart_' + index);
         if (!canvas) return;
-        
+  #{'      '}
         const ctx = canvas.getContext('2d');
         const chart = new Chart(ctx, {
           type: 'bar',
@@ -379,44 +381,44 @@ html_template = <<~ERB
           },
           options: chartOptions
         });
-        
+  #{'      '}
         // Stash original arrays so we can sort/unsort perfectly
         chart.originalLabels = [...baseSolvers];
         chart.originalData = [...graph.raw_times];
         chart.originalCorrectness = [...graph.is_correct];
-        
+  #{'      '}
         chartInstances.push(chart);
       });
 
       // Handle the sort toggle
       document.getElementById('sortToggle').addEventListener('change', function(e) {
         const doSort = e.target.checked;
-        
+  #{'      '}
         chartInstances.forEach(chart => {
           if (doSort) {
             // Pair the label, value, and correctness status together
             let paired = chart.originalLabels.map((label, i) => {
-              return { 
-                label: label, 
-                val: chart.originalData[i], 
-                correct: chart.originalCorrectness[i] 
+              return {#{' '}
+                label: label,#{' '}
+                val: chart.originalData[i],#{' '}
+                correct: chart.originalCorrectness[i]#{' '}
               };
             });
-            
+  #{'          '}
             // Sort ascending (treat null/timeout as Infinity to push to far right)
             paired.sort((a, b) => {
               let valA = a.val === null ? Infinity : a.val;
               let valB = b.val === null ? Infinity : b.val;
               return valA - valB;
             });
-            
+  #{'          '}
             // Apply sorted arrays back to the chart
             chart.data.labels = paired.map(p => p.label);
             chart.data.datasets[0].data = paired.map(p => p.val);
             chart.data.datasets[0].backgroundColor = paired.map(p => getBgColor(p.correct));
             chart.data.datasets[0].borderColor = paired.map(p => getBorderColor(p.correct));
             chart.data.datasets[0].borderDash = paired.map(p => getBorderDash(p.correct));
-            
+  #{'          '}
           } else {
             // Revert to original parsed order
             chart.data.labels = [...chart.originalLabels];
@@ -425,7 +427,7 @@ html_template = <<~ERB
             chart.data.datasets[0].borderColor = chart.originalCorrectness.map(getBorderColor);
             chart.data.datasets[0].borderDash = chart.originalCorrectness.map(getBorderDash);
           }
-          
+  #{'        '}
           chart.update(); // Trigger the animation
         });
       });

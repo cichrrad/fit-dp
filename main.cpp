@@ -136,6 +136,11 @@ int main(int argc, char *argv[])
 
             // PROCESS =================================================
 
+            // if (iteration % 50 == 0)
+            // {
+            //     std::cout << "current high queue size is " << h_current_high_size << "\n";
+            //     std::cout << "current low queue size is " << h_current_low_size << "\n";
+            // }
             // low vertices
             if (h_current_low_size > 0)
             {
@@ -200,7 +205,7 @@ int main(int argc, char *argv[])
                                                 int degree_v = g.row_map(v + 1) - g.row_map(v);
 
                                                 // Route to the correct queue!
-                                                if (degree_v <= 32) {
+                                                if (degree_v <= pseudo_warp_size) {
                                                     size_t pos = Kokkos::atomic_fetch_add(&g.next_low_size(), 1);
                                                     g.next_low(pos) = v;
                                                 } else {
@@ -270,7 +275,7 @@ int main(int argc, char *argv[])
             if (h_current_high_size > 0)
             {
 
-                Kokkos::TeamPolicy<Device> policy_high(h_current_high_size, 32);
+                Kokkos::TeamPolicy<Device> policy_high(h_current_high_size, pseudo_warp_size);
                 Kokkos::parallel_for("process_high_kernel", policy_high, KOKKOS_LAMBDA(const Kokkos::TeamPolicy<Device>::member_type &team) {
                 // League rank maps exactly to the active vertex index
                 int u = g.current_high(team.league_rank());
@@ -340,6 +345,10 @@ int main(int argc, char *argv[])
                                 if (thread_min_d < update) update = thread_min_d;
                             }, Kokkos::Min<unsigned long>(team_min_d));
                     
+                        if (team_min_d < local_min_d) {
+                           local_min_d = team_min_d;
+                        }
+
                         // Did anyone skip an admissible edge?
                         int thread_skipped = (valid_edge && admissible && !wins) ? 1 : 0;
                         int team_skipped = 0;
@@ -348,6 +357,12 @@ int main(int argc, char *argv[])
                                 update += thread_skipped;
                             }, team_skipped);
                     
+                        if (team_skipped > 0) {
+                            skipped_admissible = 1;
+                            if (first_skipped_chunk == -1) {
+                                first_skipped_chunk = chunk_start;
+                            }
+                        }
                     
                         // 3. TEAM PREFIX SUM FOR PUSHING
                         long long req_flow = (valid_edge && admissible && wins && cap > 0) ? cap : 0;
@@ -396,7 +411,7 @@ int main(int argc, char *argv[])
                                 // NOTE: - This is never OOB access, though it looks
                                 // like one (CSR format perk)
                                 int n_degree = g.row_map(v + 1) - g.row_map(v);
-                                if (n_degree > 32) is_high = 1;
+                                if (n_degree > pseudo_warp_size) is_high = 1;
                                 else is_low = 1;
                             }
                         }
@@ -565,6 +580,8 @@ int main(int argc, char *argv[])
 
             Kokkos::deep_copy(g.next_high_size, 0);
             Kokkos::deep_copy(g.next_low_size, 0);
+            h_current_high_size = h_next_high_size;
+            h_current_low_size = h_next_low_size;
         }
 
         // [TIMER] End Algorithm

@@ -127,6 +127,9 @@ for dimacs_file in graphs/dimacs/*.dimacs; do
             run_benchmark "knfs_cpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu \"$dimacs_file\" $t" "$iter" "$t"
             run_benchmark "knfs_gpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu \"$dimacs_file\" $t" "$iter" "$t"
             
+            run_benchmark "knfs_cpu_multipar" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_multipar \"$dimacs_file\" $t" "$iter" "$t"
+            run_benchmark "knfs_gpu_multipar" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_multipar \"$dimacs_file\" $t" "$iter" "$t"
+            
         done
 
     done

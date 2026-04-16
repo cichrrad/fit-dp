@@ -1040,12 +1040,12 @@ int main(int argc, char *argv[])
 
   t = timer() - t;
 
-  printf ("c time:        %10.2f\n", t);
+  printf ("c time:        %10.4f\n", t);
 
 #endif
 
-  printf ("c init tm:     %10.2f\n", t3);
-  printf ("c cut tm:      %10.2f\n", t2);
+  printf ("c init tm:     %10.4f\n", t3);
+  printf ("c cut tm:      %10.4f\n", t2);
 
   //  printGraph();
 #ifdef CHECK_SOLUTION

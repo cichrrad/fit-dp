@@ -1,1 +1,0 @@
-* [Worst-case graph generators for MF algos](https://codeforces.com/blog/entry/145343)

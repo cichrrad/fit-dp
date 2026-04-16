@@ -52,7 +52,13 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 
 > Note that this assumes CUDA GPU, if you have other vendor, then you must source their software so that you can run code on their hardware and configure `CMakePresets.json` to compile Kokkos for that vendor backend.
 
-If you have Nvidia GPU, then the easiest way to do this is to simply open the workspace in vscode, make sure you have the dev containers extension, then just press `CTRL+SHIFT+P` and select *reopen in container*. It might take a hot minute the first time around, as you will be downloading cuda ubuntu image to run in docker, among other things. Once done, you can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos and such. If you dont do `make clean`, most thigns will remain cached in your `build` directory for both cpu and gpu, so following recompilations should take way less time. 
+If you have Nvidia GPU, then the easiest way to do this is to simply open the workspace in vscode, make sure you have the dev containers extension, then just press `CTRL+SHIFT+P` and select *reopen in container*. It might take a hot minute the first time around, as you will be downloading cuda ubuntu image to run in docker, among other things. Once done, you can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos and such. If you dont do `make clean`, most thigns will remain cached in your `build` directory for both cpu and gpu, so following recompilations should take way less time. If you dont have NVIDIA GPU or don't plan to use GPU, you can (and probably should) comment/remove the following part of `devcontainer.json`:
+```json
+"runArgs": [
+  "--gpus", "all"
+],
+```
+At this point you might as well swap the image for plain ubuntu, but I am not sure if all dependencies will be present.
 
 Running the make commands places respective binaries to the root of the directory -- `knfs_cpu` and `knfs_gpu`. These can be then used as any other binary. For quick and dirty demo, just type 
 ```

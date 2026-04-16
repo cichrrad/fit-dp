@@ -25,23 +25,40 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 3.  **Performance Evaluation:** Benchmark the implementation on a representative set of large-scale graphs (e.g., real-world sparse matrices, small-world networks) to evaluate scalability and throughput.
 4.  **Comparative Study (optional):** Analyze the "abstraction penalty" (portability tax) and performance portability by comparing execution times and memory bandwidth utilization across different hardware architectures and, where feasible, against available reference implementations.
 
-
 ---
 
-# Notes
+# Repo structure
 
-* `export KOKKOS_TOOLS_LIBS=./profile_tools/[TOOLNAME].so ; make run` for hooking up profiler tools
+```
+.
+├── .devcontainer/              # Environment for dev + running, assumes CUDA GPU 
+├── benchmarking/               # Benchmarking scripts, logs, graph instances...
+├── helpers/                    # Ruby pre-processing scripts + convertors...
+├── input/                      # Input data (not present due to size) + mock
+├── profile_tools/              # .so profiling hooks
+├── reference_implementations/  # source codes for all reference implementations
+├── src/                        # KNFS source files
+├── CMakeLists.txt              
+├── CMakePresets.json           
+├── Gemfile                     # 'package.json', but for Ruby
+├── Gemfile.lock                # 'package-lock.json', but for Ruby
+├── Makefile                    # (look here for neat build macros)
+├── README.md                   
+├── knfs_cpu                    # CPU (AMD ZEN 2) backend compiled solver binary 
+├── knfs_gpu                    # GPU (NVIDIA AMPERE80) backend compiled solver binary
+└── main.cpp                    
+```
+# How to use
 
-* [multi-node/GPU setup](https://github.com/kokkos/kokkos-remote-spaces)
+> Note that this assumes CUDA GPU, if you have other vendor, then you must source their software so that you can run code on their hardware and configure `CMakePresets.json` to compile Kokkos for that vendor backend.
 
-* Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?
+If you have Nvidia GPU, then the easiest way to do this is to simply open the workspace in vscode, make sure you have the dev containers extension, then just press `CTRL+SHIFT+P` and select *reopen in container*. It might take a hot minute the first time around, as you will be downloading cuda ubuntu image to run in docker, among other things. Once done, you can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos and such. If you dont do `make clean`, most thigns will remain cached in your `build` directory for both cpu and gpu, so following recompilations should take way less time. 
 
-* Investigate memory traits (Random access etc)
-
-* Scatter contribute ?
-
-* `adhead.n26c100.max.csv` load
-
-* debug headers re-check
-
-* benchmarking
+Running the make commands places respective binaries to the root of the directory -- `knfs_cpu` and `knfs_gpu`. These can be then used as any other binary. For quick and dirty demo, just type 
+```
+make generate_graph ; make to_dimacs ; make run_cpu # or make run_gpu
+```
+This will generate new mock graph and run the solver on it. To run on some graph, make sure it is standard DIMACS format and just provide it as an argument to the binary like
+```
+knfs_gpu my_graph.dimacs
+```

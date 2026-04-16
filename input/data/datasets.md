@@ -1,4 +1,3 @@
-
 # Data sets (from 13th DIMACS challenge site)
 
 * **PUNCH** -- road network partitioning 

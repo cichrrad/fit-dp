@@ -15,7 +15,7 @@ echo "Benchmarking started at $(date)" | tee "$LOGFILE"
 echo "Log file: $LOGFILE" | tee -a "$LOGFILE"
 echo "---------------------------------------------------" | tee -a "$LOGFILE"
 
-# PHASE 1: GRAPH CONVERSION (Optional)
+# PHASE 1: GRAPH CONVERSION
 echo ">>> PHASE 1: Checking and converting graphs..." | tee -a "$LOGFILE"
 
 for dimacs_file in graphs/dimacs/*.dimacs; do
@@ -67,6 +67,23 @@ run_benchmark() {
     echo "" >> "$LOGFILE" # Add blank line for readability
 }
 
+# Helper function to capture, rename, and move Kokkos memory dumps
+rename_mem_dumps() {
+    local binary_name=$1
+    local current_iter=$(printf "%02d" $2)
+    local graph_name=$3
+    local target_dir="./profiler_dumps/memory_usage"
+
+    mkdir -p "$target_dir"
+
+    for dump_file in *-Host.memspace_usage *-Cuda.memspace_usage; do
+        if [ -e "$dump_file" ]; then
+            local new_name="${binary_name}_${current_iter}_${graph_name}_${dump_file}"
+            mv "$dump_file" "${target_dir}/${new_name}"
+        fi
+    done
+}
+
 # Iterate through all DIMACS graphs
 for dimacs_file in graphs/dimacs/*.dimacs; do
     [ -e "$dimacs_file" ] || continue 
@@ -100,7 +117,7 @@ for dimacs_file in graphs/dimacs/*.dimacs; do
         run_benchmark "hipr4" "./binaries/hipr4 < \"$dimacs_file\"" "$iter" ""
         
         # - ECL_MaxFlow
-        # this crashes GPU randomly for some reason, better to run it alone ???
+        # this crashes GPU randomly for some reason, better to run it alone
         # might be cause we are running from devcontainer with GPU passthrough, though idk 
         # run_benchmark "ECL_MaxFlow" "./binaries/ECL_MaxFlow \"$ecl_file\" $source_0 $sink_0" "$iter" ""
         
@@ -110,23 +127,16 @@ for dimacs_file in graphs/dimacs/*.dimacs; do
         # - pbbs_syncpar
         run_benchmark "pbbs_syncpar" "./binaries/pbbs_syncpar \"$pbbs_file\"" "$iter" ""
         
-        # - knfs_cpu & knfs_gpu (With thread options)
+        # - knfs_cpu & knfs_gpu
         for t in 0; do
-            # run_benchmark "knfs_cpu_AE" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AE \"$dimacs_file\" $t" "$iter" "$t"
-            # run_benchmark "knfs_gpu_AE" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AE \"$dimacs_file\" $t" "$iter" "$t"
-            
-            # run_benchmark "knfs_cpu_AP" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AP \"$dimacs_file\" $t" "$iter" "$t"
-            # run_benchmark "knfs_gpu_AP" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AP \"$dimacs_file\" $t" "$iter" "$t"
-              
-            # run_benchmark "knfs_cpu_AP2" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_AP2 \"$dimacs_file\" $t" "$iter" "$t"
-            # run_benchmark "knfs_gpu_AP2" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_AP2 \"$dimacs_file\" $t" "$iter" "$t"
-            
-            # run_benchmark "knfs_cpu_old" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_old \"$dimacs_file\" $t" "$iter" "$t"
-            # run_benchmark "knfs_gpu_old" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_old \"$dimacs_file\" $t" "$iter" "$t"
-            
-            run_benchmark "knfs_cpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu \"$dimacs_file\" $t" "$iter" "$t"
+           
             run_benchmark "knfs_gpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu \"$dimacs_file\" $t" "$iter" "$t"
-            
+            run_benchmark "knfs_cpu" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu \"$dimacs_file\" $t" "$iter" "$t"
+
+            # Alternative multipar solvers
+            # run_benchmark "knfs_gpu_multipar" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_gpu_multipar \"$dimacs_file\" $t" "$iter" "$t"
+            # run_benchmark "knfs_cpu_multipar" "env OMP_PROC_BIND=spread OMP_PLACES=threads ./binaries/knfs_cpu_multipar \"$dimacs_file\" $t" "$iter" "$t"
+
         done
 
     done

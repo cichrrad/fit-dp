@@ -1,3 +1,6 @@
+> For the main KNFS implementation, see [main branch](https://github.com/cichrrad/fit-dp). For the alternative multipar implementation, see [dev_multiparallelism branch](https://github.com/cichrrad/fit-dp/tree/dev_multiparallelism)
+---
+
 # Assignment of Master's Thesis
 
 | Field | Details |

@@ -69,6 +69,23 @@ If that is the case, using the devcontainer as-is is not really a good idea, as 
 
 In addition to this, if you want to use the support scripts and to have full functionality, you need to also have Ruby (*latest* on ubuntu should do) installed as I use helper ruby scripts in some `make` macros and also to parse logs for the HTML report page.
 
+### OPTION 3: I will only use CPU / I have no GPU
+
+In that case, you can use plain ubuntu but then I am not sure if all dependencies are met. Alternative is to use the container, just comment out the parts which set up gpu passthrough in `devcontainer.json`, namely:
+```json
+"runArgs": [
+  "--gpus", "all"
+],
+```
+and
+```json
+"remoteEnv": {
+  "PATH": "${containerEnv:PATH}:/usr/local/cuda/bin",
+  "LD_LIBRARY_PATH": "${containerEnv:LD_LIBRARY_PATH}:/usr/local/cuda/lib64"
+},
+```
+You won't be able to run GPU backend compiled variant of the solver (duh). I did this on my laptop without dedicated GPU and I was able to build the container and compile and run the CPU backend binary no problem.
+
 ## Building & running the solver binary
 
 You can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos. If you dont do `make clean`, most thigns will remain cached in your `build` directory for both cpu and gpu after first build, so following recompilations should take way less time.

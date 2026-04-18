@@ -61,7 +61,7 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 
 Easiest way to do this is to simply open the workspace in vscode, make sure you have the dev containers extension, then just press `CTRL+SHIFT+P` and select *reopen in container*. It might take a hot minute to build, as you will be downloading cuda ubuntu image to run in docker and potentially compiling features for the container (python and Ruby). I should certainly have put those into post creation `apt-get`, but I worked with this exact container and at this point I am too scared to change it + to keep consistency. Any subsequent opening of the container will be basically instant unless you choose to rebuild it without cache.
 
-If you cannot or refuse to use the attached devcontainer, you dont have to, but you'll need to download and source the dependencies for your GPU vendor etc. Matching the table in thesis **Chapter 5, Section 1** should do the job (module different vendor software of course, if thats the case).
+If you cannot or refuse to use the attached devcontainer, you dont have to, but you'll need to download and source the dependencies for your GPU vendor etc. Matching the table in thesis **Chapter 5, Section 1** should do the job (modulo different vendor software of course, if thats the case).
 
 ### OPTION 2: I have another GPU vendor (AMD,...)
 
@@ -88,7 +88,7 @@ You won't be able to run GPU backend compiled variant of the solver (duh). I did
 
 ## Building & running the solver binary
 
-You can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos. If you dont do `make clean`, most thigns will remain cached in your `build` directory for both cpu and gpu after first build, so following recompilations should take way less time.
+You can use `Makefile` macros to build GPU/CPU variant of the solver with `make gpu` or `make cpu`. First time around this will also take quite some time, because you need to download Kokkos. If you dont do `make clean`, most things will remain cached in your `build` directory for both cpu and gpu after first build, so following recompilations should take way less time.
 
 Running the make commands places respective binaries --`knfs_cpu` and `knfs_gpu`-- to the root of the directory. These can be then used as any other binary. For quick and dirty demo, just type 
 
@@ -108,6 +108,6 @@ To see the logs which were processed as part of the thesis, look into `benchmark
 
 # Run your own benchmarks
 
-I hopefully set this up so that it is fairly easy to do this. In `benchmarking` directory, you have `graphs/dimacs` directory. This is where all the graph instances you want to run solvers on go. Just place the graph in standard dimacs format there and you can then run `./benchmark.sh` from the root of `benchmarking` dir. What happens is the script tries to match each graph in `dimacs` with its converted format in `graphs/ecl` and `graph/pbbs` for ELC and syncpar solvers. If they dont exist, thats fine, as it reaches into `binaries` directory and runs conversion binary (provided by the solvers, I just moved them here for ease of use). **DO NOT** rename graphs once you place them into the `dimacs` directory, as the matching is name based and you will create redundant copies of same graph. After this initial matching phase, benchmarking starts. Look at line 88 and onward in `benchmark.sh` and see, its a simple loop injecting headers for graph instances and then also solver runs and iterations, so that later parsing is much easier. ECL is commented out by default due to instability. Alternative KNFS solver is also commented out by default.
+I hopefully set this up so that it is fairly easy to do this. In `benchmarking` directory, you have `graphs/dimacs` directory. This is where all the graph instances you want to run solvers on go. Just place the graph in standard dimacs format there and you can then run `./benchmark.sh` from the root of `benchmarking` dir. What happens is the script tries to match each graph in `dimacs` with its converted format in `graphs/ecl` and `graph/pbbs` for ECL and syncpar solvers. If they dont exist, thats fine, as it reaches into `binaries` directory and runs conversion binary (provided by the solvers, I just moved them here for ease of use). **DO NOT** rename graphs once you place them into the `dimacs` directory, as the matching is name based and you will create redundant copies of same graph. After this initial matching phase, benchmarking starts. Look at line 88 and onward in `benchmark.sh` and see, its a simple loop injecting headers for graph instances and then also solver runs and iterations, so that later parsing is much easier. ECL is commented out by default due to instability. Alternative KNFS solver is also commented out by default.
 
 Running the benchmark will produce timestamped log in `logs`. You can then run `ruby master_parse.rb logs/my_log_file.log` to generate html dashboard summary.

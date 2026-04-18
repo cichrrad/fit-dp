@@ -25,23 +25,38 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 3.  **Performance Evaluation:** Benchmark the implementation on a representative set of large-scale graphs (e.g., real-world sparse matrices, small-world networks) to evaluate scalability and throughput.
 4.  **Comparative Study (optional):** Analyze the "abstraction penalty" (portability tax) and performance portability by comparing execution times and memory bandwidth utilization across different hardware architectures and, where feasible, against available reference implementations.
 
-
 ---
+
+# Repo structure
+
+> This branch has basically the same structure as the main one, but the source code files are for the alternative approach, described in thesis **Chapter 4, Section 7**
+
+```
+.
+├── .devcontainer/              # Environment for dev + running, assumes CUDA GPU 
+├── helpers/                    # Ruby pre-processing scripts + convertors...
+├── input/                      # Input data (not present due to size) + mock
+├── profile_tools/              # .so profiling hooks
+├── reference_implementations/  # source codes for all reference implementations
+├── src/                        # KNFS multipar source files
+├── CMakeLists.txt              
+├── CMakePresets.json           
+├── Gemfile                     # 'package.json', but for Ruby
+├── Gemfile.lock                # 'package-lock.json', but for Ruby
+├── Makefile                    # (look here for neat build macros)
+├── README.md                   
+└── main.cpp                    
+```
+# How to use
+
+This branch usage is very analogous to the main one. Quick and dirty demo can once again be done with
+
+```
+make generate_graph ; make to_dimacs; make run_cpu_multipar # or run_gpu_multipar
+```
 
 # Notes
 
-* `export KOKKOS_TOOLS_LIBS=./profile_tools/[TOOLNAME].so ; make run` for hooking up profiler tools
+* This approach was not as battle tested as the main one, but it did seem to pass the whole benchmark suite (at least the GPU variant), modulo the instability mentioned in the thesis.
 
-* [multi-node/GPU setup](https://github.com/kokkos/kokkos-remote-spaces)
-
-* Look into `Kokkos::ViewAllocateWithoutInitializing` for performance gain?
-
-* Investigate memory traits (Random access etc)
-
-* Scatter contribute ?
-
-* `adhead.n26c100.max.csv` load
-
-* debug headers re-check
-
-* benchmarking
+* CPU compiled version should work too, but Kokkos fetches max pseudo warp size as 1024 and it can crash. If you lower this based on your CPU (I am assuming <= logical core count works), it should work. To do so, modify `pseudo_warp_size` variable in `main.cpp`, ~ line 52.

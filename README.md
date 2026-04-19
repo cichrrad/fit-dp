@@ -51,6 +51,10 @@ The student will implement a synchronous, bulk-parallel variant of the Push-Rela
 ├── knfs_gpu                    # GPU (NVIDIA AMPERE80) backend compiled solver binary
 └── main.cpp                    
 ```
+# DISCLAIMER
+
+This software is licensed under GPLv3. It relies on the Kokkos Ecosystem, which is provided under the Apache License 2.0 with LLVM Exceptions.
+
 # How to use
 
 > Note that this assumes CUDA GPU, if you have other vendor, then you must source their software so that you can run code on their hardware and configure `CMakePresets.json` to compile Kokkos for that vendor backend.
